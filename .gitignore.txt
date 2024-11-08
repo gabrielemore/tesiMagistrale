@@ -1,0 +1,7 @@
+*.asv
+*.m~
+*.bak
+*.log
+*.aux
+*.tmp
+*.out
