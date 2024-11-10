@@ -1,0 +1,5 @@
+Estrazione dati e conversione unita di misura (al momento per un singolo paziente) 
+cercate corrispondenza tra variabili paper e documentazione pancreas artificiale
+
+convertito le unita di misura estratte in modo da renderle compatibili con il paper
+
