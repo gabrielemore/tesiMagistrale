@@ -1,5 +1,0 @@
-function J = cost_function(theta,x0,y,y_m)
-
-
-end
-

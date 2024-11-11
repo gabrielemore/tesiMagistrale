@@ -7,13 +7,15 @@ o3=theta(4);
 o4=theta(5);
 o5=theta(6);
 
-CR=(theta0(4)^-1)*theta0(3);
-%theta^0 per funzione di minimizzazione  !!!problema SEMPRE A 0
-o_0 = [o2 - CR*o3;o4-theta0(5); o5-theta0(6)]';
+%ottengo CR per trovare o_0 
+CR_0=theta0(3)/theta0(4);
+%theta^0 per funzione di minimizzazione aggiornato ad ogni iterazione
+o_0 = [o2-CR_0*o3, o4-theta0(5), o5-theta0(6)];
 %alfa per funzione di minimizzazione
-alfa = diag([1,1,1/theta0(6)]);
-%y average
-y_m = mean(y);
+alfa = diag([1,1,1/theta0(6)^2]);
+%regularizaiton term
+reg= o_0*alfa*o_0';
+
 
 %Definizione sistema lineare in forma matriciale
 A = [-o1 -o2 0 o3 0;0 -1/o4 1/o4 0 0;0 0 -1/o4 0 0; 0 0 0 -1/o5 1/o5; 0 0 0 0 -1/o5];
@@ -24,10 +26,16 @@ C=[1 0 0 0 0];
 
 J=0;
 x(:,1)=x0;
+y_cap = zeros(T,1);
+y_m = mean(y(1:T));
 
 for k=1:T
-    x(:,k+1)=x(:,k) + Ts*[A*x(:,k) + B_u*u(k) + B_r*r(k) + E];
+    %sistema lineare
+    x(:,k+1) = x(:,k) + Ts*(A*x(:,k) + B_u*u(k) + B_r*r(k) + E);
     y_cap(k)=C*x(:,k);
-    J=J+ (norm(y(k)-y_cap(k))^2/norm(y(k)-y_m)^2 + o_0*alfa*o_0');
+    
+    % %y average al tempo k
+    % y_m_k = mean(y(1:k));
+    J = J + (norm(y(k)-y_cap(k)))^2/(norm(y(k)-y_m))^2 + reg ;
 end
 

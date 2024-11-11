@@ -46,12 +46,12 @@ Ub = Ub_day/(24*60);
 %% STIMA DEI PARAMETRI
 
 %inizializzazione valori iniziali parametri
-o1=0.004;
-o2=CF;
-o3=CF/CR;
-o4=56;
-o5=40;
-o0= o1*Gb + o2*Ub;
+o1 = 0.004; % [1/min]
+o2 = CF; % [mg/(dL·U)]
+o3 = CF/CR; % [mg/(dL·g)]
+o4 = 56; % [min]
+o5 = 40; % [min]
+o0 = o1*Gb + o2*Ub; % [mg/dL/min]
 
 %vettore teta0 iniziale
 theta0= [o0 o1 o2 o3 o4 o5]';
@@ -64,23 +64,23 @@ Ts = 1;
 %stati iniziali
 x0=[Gb Ub Ub 0 0]';
 
-t_min = zeros(6,1);
-t_max = ones(6,1)*inf;
-[theta_ott] = fmincon(@(theta) cost_function(theta,x0,y,u,r,Ts,T_4_days,theta0),theta0,[],[],[],[],t_min,t_max);
+min = zeros(6,1);
+max = ones(6,1)*inf;
+[theta_ott] = fmincon(@(theta) cost_function(theta,x0,y,u,r,Ts,T_4_days,theta0),theta0, [], [], [], [], min, max);
 
 
-%% DEFINIZIONE SISTEMA LINEARE
-
-o0=theta_ott(1);
-o1=theta_ott(2);
-o2=theta_ott(3);
-o3=theta_ott(4);
-o4=theta_ott(5);
-o5=theta_ott(6);
-
-%Definizione sistema lineare in forma matriciale
-A = [-o1 -o2 0 o3 0;0 -1/o4 1/o4 0 0;0 0 -1/o4 0 0; 0 0 0 -1/o5 1/o5; 0 0 0 0 -1/o5];
-B_u= [0 0 1/o4 0 0]';
-B_r= [0 0 0 0 1/o5]';
-E=[o0 0 0 0 0];
-C=[1 0 0 0 0]';
+% %% DEFINIZIONE SISTEMA LINEARE
+% 
+% o0=theta_ott(1);
+% o1=theta_ott(2);
+% o2=theta_ott(3);
+% o3=theta_ott(4);
+% o4=theta_ott(5);
+% o5=theta_ott(6);
+% 
+% %Definizione sistema lineare in forma matriciale
+% A = [-o1 -o2 0 o3 0;0 -1/o4 1/o4 0 0;0 0 -1/o4 0 0; 0 0 0 -1/o5 1/o5; 0 0 0 0 -1/o5];
+% B_u= [0 0 1/o4 0 0]';
+% B_r= [0 0 0 0 1/o5]';
+% E=[o0 0 0 0 0];
+% C=[1 0 0 0 0]';
