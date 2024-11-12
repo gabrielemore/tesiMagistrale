@@ -34,6 +34,11 @@ r=data_circadian_off.Subjects(1).Signals.inputs_mealCHO;
 %y(t) - sensor [mg/dl]
 y = data_circadian_off.Subjects(1).Signals.Sensors__replace_me__;
 
+%IOB [U]
+IOB_b = data_circadian_off.Subjects(1).Signals.insulin_Normal_Basal_Use_IOB;
+IOB_bol = data_circadian_off.Subjects(1).Signals.insulin_Normal_Bolus_Use_IOB;
+IOB = IOB_b + IOB_bol;
+
 %% CONVERSIONE UNITA DI MISURA
 % r - [mg]->[g]
 r = r/1000;
@@ -126,3 +131,55 @@ disp("GoF train: " + GoF_train );
 disp("GoF test: " + GoF_test );
 
 %% CONFRONTO GRAFICO
+
+%CGM
+figure('Name', 'Confronto CGM: Reale vs Stimato - Paziente 001');
+% Plot dei dati 
+%train
+plot(0:1:T_4_days-1, y(1:T_4_days), 'r--', 'LineWidth', 1.5, 'DisplayName', 'CGM Reale (Train)');
+hold on;
+plot(0:1:T_4_days-1, y_cap_train, 'b-', 'LineWidth', 1.5, 'DisplayName', 'CGM Stimato (Train)');
+%test
+plot(T_4_days:1:time, y(T_4_days:time), 'g-', 'LineWidth', 1.5, 'DisplayName', 'CGM Reale (Test)');
+plot(T_4_days:1:time, y_cap_test, 'm--', 'LineWidth', 1.5, 'DisplayName', 'CGM Stimato (Test)');
+
+% linea verticale di separazione
+xline(T_4_days, 'k--', 'LineWidth', 2, 'DisplayName', 'Train-Test Split');
+
+hold off;
+grid on;
+xlabel('Tempo');
+ylabel('Glucosio [mg/dL]');
+title('Confronto CGM: Reale vs Stimato - Paziente 001');
+legend('show');
+set(gca, 'FontSize', 12);
+set(gcf, 'Color', 'white');
+
+%IOB
+%calcolo IOB_cap
+IOB_cap_train = o4*(x_train(2,:) + x_train(3,:));
+IOB_cap_test = o4*(x_test(2,:) + x_test(3,:));
+
+figure('Name', 'Confronto IOB: Reale vs Stimato - Paziente 001');
+% Plot dei dati 
+%train
+plot(0:1:T_4_days-1, IOB(1:T_4_days), 'r--', 'LineWidth', 1.5, 'DisplayName', 'IOB Reale (Train)');
+hold on;
+plot(0:1:T_4_days-1, IOB_cap_train(1:T_4_days), 'b-', 'LineWidth', 1.5, 'DisplayName', 'IOB Stimato (Train)');
+%test
+plot(T_4_days:1:time, IOB(T_4_days:time), 'g-', 'LineWidth', 1.5, 'DisplayName', 'IOB Reale (Test)');
+plot(T_4_days:1:time, IOB_cap_test(1:T_3_days+1), 'm--', 'LineWidth', 1.5, 'DisplayName', 'IOB Stimato (Test)');
+
+% linea verticale di separazione
+xline(T_4_days, 'k--', 'LineWidth', 2, 'DisplayName', 'Train-Test Split');
+
+hold off;
+grid on;
+xlabel('Tempo');
+ylabel('IOB [U]');
+title('Confronto IOB: Reale vs Stimato - Paziente 001');
+legend('show');
+set(gca, 'FontSize', 12);
+set(gcf, 'Color', 'white');
+
+%Ra
