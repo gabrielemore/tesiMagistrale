@@ -39,6 +39,9 @@ IOB_b = data_circadian_off.Subjects(1).Signals.insulin_Normal_Basal_Use_IOB;
 IOB_bol = data_circadian_off.Subjects(1).Signals.insulin_Normal_Bolus_Use_IOB;
 IOB = IOB_b + IOB_bol;
 
+%Rate of glucose apperance in plasma [mg/kg/ min] 
+Ra = data_circadian_off.Subjects(1).Signals.subjE_G_app_rate; 
+
 %% CONVERSIONE UNITA DI MISURA
 % r - [mg]->[g]
 r = r/1000;
@@ -46,6 +49,9 @@ r = r/1000;
 u = u/6000;
 % Ub - [U/day]->[U/min]
 Ub = Ub_day/(24*60);
+
+%da verificare
+Ra=Ra/2.7;
 
 
 %% STIMA DEI PARAMETRI
@@ -132,7 +138,7 @@ disp("GoF test: " + GoF_test );
 
 %% CONFRONTO GRAFICO
 
-%CGM
+%-------------CGM--------------
 figure('Name', 'Confronto CGM: Reale vs Stimato - Paziente 001');
 % Plot dei dati 
 %train
@@ -140,8 +146,8 @@ plot(0:1:T_4_days-1, y(1:T_4_days), 'r--', 'LineWidth', 1.5, 'DisplayName', 'CGM
 hold on;
 plot(0:1:T_4_days-1, y_cap_train, 'b-', 'LineWidth', 1.5, 'DisplayName', 'CGM Stimato (Train)');
 %test
-plot(T_4_days:1:time, y(T_4_days:time), 'g-', 'LineWidth', 1.5, 'DisplayName', 'CGM Reale (Test)');
-plot(T_4_days:1:time, y_cap_test, 'm--', 'LineWidth', 1.5, 'DisplayName', 'CGM Stimato (Test)');
+plot(T_4_days:1:time, y(T_4_days:time), 'g--', 'LineWidth', 1.5, 'DisplayName', 'CGM Reale (Test)');
+plot(T_4_days:1:time, y_cap_test, 'm-', 'LineWidth', 1.5, 'DisplayName', 'CGM Stimato (Test)');
 
 % linea verticale di separazione
 xline(T_4_days, 'k--', 'LineWidth', 2, 'DisplayName', 'Train-Test Split');
@@ -155,7 +161,7 @@ legend('show');
 set(gca, 'FontSize', 12);
 set(gcf, 'Color', 'white');
 
-%IOB
+%------------IOB------------
 %calcolo IOB_cap
 IOB_cap_train = o4*(x_train(2,:) + x_train(3,:));
 IOB_cap_test = o4*(x_test(2,:) + x_test(3,:));
@@ -167,8 +173,8 @@ plot(0:1:T_4_days-1, IOB(1:T_4_days), 'r--', 'LineWidth', 1.5, 'DisplayName', 'I
 hold on;
 plot(0:1:T_4_days-1, IOB_cap_train(1:T_4_days), 'b-', 'LineWidth', 1.5, 'DisplayName', 'IOB Stimato (Train)');
 %test
-plot(T_4_days:1:time, IOB(T_4_days:time), 'g-', 'LineWidth', 1.5, 'DisplayName', 'IOB Reale (Test)');
-plot(T_4_days:1:time, IOB_cap_test(1:T_3_days+1), 'm--', 'LineWidth', 1.5, 'DisplayName', 'IOB Stimato (Test)');
+plot(T_4_days:1:time, IOB(T_4_days:time), 'g--', 'LineWidth', 1.5, 'DisplayName', 'IOB Reale (Test)');
+plot(T_4_days:1:time, IOB_cap_test(1:T_3_days+1), 'm-', 'LineWidth', 1.5, 'DisplayName', 'IOB Stimato (Test)');
 
 % linea verticale di separazione
 xline(T_4_days, 'k--', 'LineWidth', 2, 'DisplayName', 'Train-Test Split');
@@ -182,4 +188,29 @@ legend('show');
 set(gca, 'FontSize', 12);
 set(gcf, 'Color', 'white');
 
-%Ra
+%-----------Ra-------------
+%calcolo Ra_cap
+Ra_cap_train = o3*x_train(4,:);
+Ra_cap_test = o3*x_test(4,:);
+
+figure('Name', 'Confronto Ra: Reale vs Stimato - Paziente 001');
+% Plot dei dati 
+%train
+plot(0:1:T_4_days-1, Ra(1:T_4_days), 'r--', 'LineWidth', 1.5, 'DisplayName', 'Ra Reale (Train)');
+hold on;
+plot(0:1:T_4_days-1, Ra_cap_train(1:T_4_days), 'b-', 'LineWidth', 1.5, 'DisplayName', 'Ra Stimato (Train)');
+%test
+plot(T_4_days:1:time, Ra(T_4_days:time), 'g--', 'LineWidth', 1.5, 'DisplayName', 'Ra Reale (Test)');
+plot(T_4_days:1:time, Ra_cap_test(1:T_3_days+1), 'm-', 'LineWidth', 1.5, 'DisplayName', 'Ra Stimato (Test)');
+
+% linea verticale di separazione
+xline(T_4_days, 'k--', 'LineWidth', 2, 'DisplayName', 'Train-Test Split');
+
+hold off;
+grid on;
+xlabel('Tempo');
+ylabel('IOB [U]');
+title('Confronto Ra: Reale vs Stimato - Paziente 001');
+legend('show');
+set(gca, 'FontSize', 12);
+set(gcf, 'Color', 'white');

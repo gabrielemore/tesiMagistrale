@@ -1,2 +1,8 @@
 Nel calcolo dei parametri esistono degli upper bound "reali"?
 Cacolo della funzione di costo fatta in due modi diversi, uno piu lento dell'altro ma con risultati simili tra loro. Un terzo metodo probabilmente sbagliato otteneva valori di theta2 e 3 dimensionalmente sbagliate
+
+aggiunto grafici di confronto CGM IOB e Ra (e relative aggiunte per acquisizione dati, conversione e calcolo con parametri e stati stimati)
+
+Rimane da sistemare l'indice temporale della divisione trian e test (da affinare) sia per i grafici che per il calcolo dei vettori
+
+migliorare i colori dei grafici (es. il dato reale puo avere un solo colore per tutta la durata del time, cambio solo quello simulato tra train e set) 
