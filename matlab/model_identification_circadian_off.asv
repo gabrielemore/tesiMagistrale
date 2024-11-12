@@ -86,43 +86,33 @@ C=[1 0 0 0 0];
 
 %% CONFRONTO PARAMETRI INIZIALI E PARAMETRI OTTENUTI
 CR_cap = o2/o3;
-disp("-------------");
-disp("CR: " + CR + " - CR stimato: " + CR_cap);
-disp("theta4 iniziale: " + o04 + " - theta4 stimato: " + o4);
-disp("theta5 iniziale: " + o05 + " - theta5 stimato: " + o5);
+disp("CR: " + CR + " CR stimato: " + CR_cap);
+disp("theta4 iniziale: " + o04 + " theta4 stimato: " + o4);
+disp("theta5 iniziale: " + o05 + " theta5 stimato: " + o5);
 
 %% SIMULAZIONE SISTEMA LINEARE CON PARAMETRI STIMATI
 
 %train
-x_train(:,1)=x0;
 for k=1:T_4_days
     %sistema lineare
     x_train(:,k+1) = x_train(:,k) + Ts*(A*x_train(:,k) + B_u*u(k) + B_r*r(k) + E);
     y_cap_train(k)=C*x_train(:,k);
-    
-    %costruzione vettore medie al tempo k
+
     y_m_train(k)=mean(y(1:k));
 end
 
 %test
-x_test(:,1)=x0;
 i=1;
 for k=T_4_days:time
     %sistema lineare
-    x_test(:,i+1) = x_test(:,i) + Ts*(A*x_test(:,i) + B_u*u(k) + B_r*r(k) + E);
-    y_cap_test(i)=C*x_test(:,i);
+    x_test(:,k+1) = x_test(:,k) + Ts*(A*x_test(:,k) + B_u*u(k) + B_r*r(k) + E);
+    y_cap_test(k)=C*x_test(:,k);
 
-    %costruzione vettore medie al tempo k
-    y_m_test(i)=mean(y(T_4_days:k));
-    i=i+1;
+     y_m_t(k)=mean(y(1:k));
 end
 
 %% METRICHE GoF TRAIN E TEST
 
-disp("-------------");
-GoF_train = 100*(1 - (norm(y(1:T_4_days)- y_cap_train(1:T_4_days)'))/(norm(y(1:T_4_days) - y_m_train')));
-GoF_test = 100*(1 - (norm(y(T_4_days:time)- y_cap_test'))/(norm(y(T_4_days:time) - y_m_test')));
-disp("GoF train: " + GoF_train );
-disp("GoF test: " + GoF_test );
+GoF_train = 100-(1-norm(y(1:T_4_days) - y_cap_train(1:T_4_days))/norm(y(1:T_4_days) - ))
 
 %% CONFRONTO GRAFICO

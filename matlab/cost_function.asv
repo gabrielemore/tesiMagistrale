@@ -41,7 +41,7 @@ for k=1:T
     % y_m_k = mean(y(1:k));
     % J = J + (norm(y(k)-y_cap(k)))^2/(norm(y(k)-y_m))^2 + reg ;
     
-    % costruzione vettore media al tempo k versione J fuori dal ciclo
+    % costruzione vemedia al tempo k versione J fuori dal ciclo
     y_m(k)=mean(y(1:k));
     
     % %versione lenta, risultati simili a J fuori dal ciclo

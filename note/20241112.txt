@@ -1,0 +1,2 @@
+Nel calcolo dei parametri esistono degli upper bound "reali"?
+Cacolo della funzione di costo fatta in due modi diversi, uno piu lento dell'altro ma con risultati simili tra loro. Un terzo metodo probabilmente sbagliato otteneva valori di theta2 e 3 dimensionalmente sbagliate
