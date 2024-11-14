@@ -9,7 +9,7 @@ o5=theta(6);
 
 %ottengo CR per trovare o_0 
 CR_0=theta0(3)/theta0(4);
-%theta^0 per funzione di minimizzazione aggiornato ad ogni iterazione
+%theta^0 per funzione di minimizzazione
 o_0 = [o2-CR_0*o3, o4-theta0(5), o5-theta0(6)];
 %alfa per funzione di minimizzazione
 alfa = diag([1,1,1/theta0(6)^2]);
