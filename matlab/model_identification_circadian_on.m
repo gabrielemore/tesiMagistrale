@@ -8,8 +8,8 @@ data_circadian_off = load("C:\Users\ITAPC\Documents\università\tesi MAGISTRALE\
 
 %% ESTRAZIONE DATI
 
-%time full simulation
-time = data_circadian_off.SimSettings.simDurationMinutes; %[min]
+%time full simulation [min]
+time = data_circadian_off.SimSettings.simDurationMinutes; 
 
 %Gb - Glucose basal rate [mg/dl]
 Gb= data_circadian_off.Subjects(1).Params.Gb;
@@ -88,8 +88,8 @@ o2=theta_ott(4);
 o3=theta_ott(5);
 o4=theta_ott(6);
 
-%nuovi parametri inizializzati a 0
-o5=1; o6=1; o7=1; o8=1; o9=1;
+%nuovi parametri inizializzati a 1
+o5=50; o6=25; o7=45; o8=1; o9=1;
 %vettore teta0 iniziale
 
 theta0= [o0 o1 o2 o3 o4 o5 o6 o7 o8 o9]';
@@ -100,10 +100,10 @@ T_3_days=time-T_4_days;
 %definizione tempo di campionamento
 Ts = 1;
 %stati iniziali sistema NON lineare (aggiunto nuovo stato Si)
-x0=[Gb Ub Ub 0 0 0]';
+x0=[Gb Ub Ub 0 0 CF]';
 
 min = zeros(10,1);
 max = ones(10,1)*inf;
-[theta_ott] = fmincon(@(theta) cost_function_non_linear_system(theta,x0,y,u,r,Ts,T_4_days,theta0,CF),theta0, [], [], [], [], min, max);
+[theta_ott] = fmincon(@(theta) cost_function_non_linear_system(theta,x0,y,u,r,Ts,T_4_days,theta0),theta0, [], [], [], [], min, max);
 
 %%

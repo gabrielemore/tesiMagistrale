@@ -24,10 +24,6 @@ B_r= [0 0 0 0 1/o5]';
 E=[o0 0 0 0 0]';
 C=[1 0 0 0 0];
 
-%versione con theta2 e theta3 dimensionalmente sbagliate
-%J=0;
-%y_m = mean(y(1:T));
-
 x(:,1)=x0;
 y_cap = zeros(T,1);
 
@@ -36,12 +32,7 @@ for k=1:T
     x(:,k+1) = x(:,k) + Ts*(A*x(:,k) + B_u*u(k) + B_r*r(k) + E);
     y_cap(k)=C*x(:,k);
     
-    %versione con theta2 e theta3 dimensionalmente sbagliate
-    % %y average al tempo k
-    % y_m_k = mean(y(1:k));
-    % J = J + (norm(y(k)-y_cap(k)))^2/(norm(y(k)-y_m))^2 + reg ;
-    
-    % costruzione vettore media al tempo k versione J fuori dal ciclo
+    % costruzione vettore media al tempo k
     y_m(k)=mean(y(1:k));
     
     % %versione lenta, risultati simili a J fuori dal ciclo

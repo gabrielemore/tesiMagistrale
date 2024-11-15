@@ -8,8 +8,8 @@ data_circadian_off = load("C:\Users\ITAPC\Documents\università\tesi MAGISTRALE\
 
 %% ESTRAZIONE DATI
 
-%time full simulation
-time = data_circadian_off.SimSettings.simDurationMinutes; %[min]
+%time full simulation [min]
+time = data_circadian_off.SimSettings.simDurationMinutes; 
 
 %Gb - Glucose basal rate [mg/dl]
 Gb= data_circadian_off.Subjects(1).Params.Gb;
