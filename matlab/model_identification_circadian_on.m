@@ -15,7 +15,7 @@ time = data_circadian_off.SimSettings.simDurationMinutes;
 Gb= data_circadian_off.Subjects(1).Params.Gb;
 
 %CR - Ratio carbohydrate-to-insuline ratio [g/U]
-CR=data_circadian_off.Subjects(1).Params.CR;
+%CR=data_circadian_off.Subjects(1).Params.CR;
 
 %CF - Correction factor [mg/(dL·U)]
 CF=data_circadian_off.Subjects(1).Params.CF;
@@ -24,12 +24,12 @@ CF=data_circadian_off.Subjects(1).Params.CF;
 Ub_day = data_circadian_off.Subjects(1).Params.dailyBasalInsulin;
 
 % u(t) - Input insuline [pmol]
-inputs_subqInsulin_Normal_Basal_Use= data_circadian_off.Subjects(1).Signals.inputs_subqInsulin_Normal_Basal_Use; 
-inputs_subqInsulin_Normal_Bolus_Use=data_circadian_off.Subjects(1).Signals.inputs_subqInsulin_Normal_Bolus_Use; 
+inputs_subqInsulin_Normal_Basal_Use= data_circadian_off.Subjects(1).Signals.inputs_subqInsulin_Normal_Basal_Use(2:end); 
+inputs_subqInsulin_Normal_Bolus_Use=data_circadian_off.Subjects(1).Signals.inputs_subqInsulin_Normal_Bolus_Use(2:end); 
 u = inputs_subqInsulin_Normal_Basal_Use + inputs_subqInsulin_Normal_Bolus_Use;
 
 %r(t) - rate of carbohydrate(CHO) intake [mg]
-r=data_circadian_off.Subjects(1).Signals.inputs_mealCHO; 
+r=data_circadian_off.Subjects(1).Signals.inputs_mealCHO(2:end); 
 
 %y(t) - sensor [mg/dl]
 y = data_circadian_off.Subjects(1).Signals.Sensors__replace_me__(2:end);
@@ -49,46 +49,23 @@ r = r/1000;
 u = u/6000;
 % Ub - [U/day]->[U/min]
 Ub = Ub_day/(24*60);
-
-%da verificare
-Ra=Ra/2.7;
-
-%% STIMA PARAMETRI INIZIALI 
-
-%inizializzazione valori iniziali parametri
-o01 = 0.004; % [1/min]
-o02 = CF; % [mg/(dL·U)]
-o03 = CF/CR; % [mg/(dL·g)]
-o04 = 56; % [min]
-o05 = 40; % [min]
-o00 = o01*Gb + o02*Ub; % [mg/dL/min]
-
-%vettore teta0 iniziale
-theta0= [o00 o01 o02 o03 o04 o05]';
-
-%divisione dataset train e test
-T_4_days=60*24*4;
-T_3_days=time-T_4_days;
-%definizione tempo di campionamento
-Ts = 1;
-%stati iniziali
-x0=[Gb Ub Ub 0 0]';
-
-min = zeros(6,1);
-max = ones(6,1)*inf;
-[theta_ott] = fmincon(@(theta) cost_function(theta,x0,y,u,r,Ts,T_4_days,theta0),theta0, [], [], [], [], min, max);
+% Ra
+Vg = 2.1143; % [dL/kg];
+Ra=Ra/Vg;
+%% CARICAMENTO PARAMETRI STIMATI SISTEMA LINEARE
+load('parametri_circadian_off.mat', 'theta_ott');
 
 %% STIMA PARAMETRI SISTEMA NON LINEARE
 %Parametri iniziali per stima parametri sistema non lineare
 o0=theta_ott(1);
 o1=theta_ott(2);
-% o2=theta_ott(3); o2 nel sistema non lineare corrisponde alla sens.
+% o2=theta_ott(3); o2 nel sistema lineare corrisponde alla sens.
 % all'insulina che nel sistema NON lineare non è un parametro fisso
 o2=theta_ott(4);
 o3=theta_ott(5);
 o4=theta_ott(6);
 
-%nuovi parametri inizializzati a 1
+%nuovi parametri
 o5=50; o6=25; o7=45; o8=1; o9=1;
 %vettore teta0 iniziale
 
@@ -104,6 +81,5 @@ x0=[Gb Ub Ub 0 0 CF]';
 
 min = zeros(10,1);
 max = ones(10,1)*inf;
-[theta_ott] = fmincon(@(theta) cost_function_non_linear_system(theta,x0,y,u,r,Ts,T_4_days,theta0),theta0, [], [], [], [], min, max);
-
+[theta_ott_NL] = fmincon(@(theta) cost_function_non_linear_system(theta,x0,y,u,r,Ts,T_4_days,theta0),theta0, [], [], [], [], min, max);
 %%

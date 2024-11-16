@@ -24,12 +24,12 @@ CF=data_circadian_off.Subjects(1).Params.CF;
 Ub_day = data_circadian_off.Subjects(1).Params.dailyBasalInsulin;
 
 % u(t) - Input insuline [pmol]
-inputs_subqInsulin_Normal_Basal_Use= data_circadian_off.Subjects(1).Signals.inputs_subqInsulin_Normal_Basal_Use; 
-inputs_subqInsulin_Normal_Bolus_Use=data_circadian_off.Subjects(1).Signals.inputs_subqInsulin_Normal_Bolus_Use; 
+inputs_subqInsulin_Normal_Basal_Use= data_circadian_off.Subjects(1).Signals.inputs_subqInsulin_Normal_Basal_Use(2:end); 
+inputs_subqInsulin_Normal_Bolus_Use=data_circadian_off.Subjects(1).Signals.inputs_subqInsulin_Normal_Bolus_Use(2:end); 
 u = inputs_subqInsulin_Normal_Basal_Use + inputs_subqInsulin_Normal_Bolus_Use;
 
 %r(t) - rate of carbohydrate(CHO) intake [mg]
-r=data_circadian_off.Subjects(1).Signals.inputs_mealCHO; 
+r=data_circadian_off.Subjects(1).Signals.inputs_mealCHO(2:end); 
 
 %y(t) - sensor [mg/dl]
 y = data_circadian_off.Subjects(1).Signals.Sensors__replace_me__(2:end);
@@ -49,10 +49,9 @@ r = r/1000;
 u = u/6000;
 % Ub - [U/day]->[U/min]
 Ub = Ub_day/(24*60);
-
-%da verificare
-Ra=Ra/2.7;
-
+% Ra
+Vg = 2.1143; % [dL/kg];
+Ra=Ra/Vg;
 
 %% STIMA DEI PARAMETRI
 
@@ -244,3 +243,5 @@ title('Confronto Ra: Reale vs Stimato - Paziente 001');
 legend('show');
 set(gca, 'FontSize', 12);
 set(gcf, 'Color', 'white');
+%% SALVATAGGIO PARAMETRI SISTEMA LINEARE CIRCADIAN OFF
+save('parametri_circadian_off.mat', 'theta_ott');

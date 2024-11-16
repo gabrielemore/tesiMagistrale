@@ -1,0 +1,3 @@
+Da rivedere le dimensioni vettoriali dei dati caricati (vedere se eliminare il dato iniziale oppure no). Vedere nel caso la corrispondenza tra vettore simulato e calcolato (con u e r 'tagliati' perdo leggermente nel GoF)
+
+Ce qualcosa di sbagliato nella stima dei parametri del sistema non lineare. DeltaG diverge e fa divergere l'interno sistema 

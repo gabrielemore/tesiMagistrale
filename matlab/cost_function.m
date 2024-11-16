@@ -43,4 +43,5 @@ for k=1:T
     % end
 end
 
-J = (norm(y(1:T,1)-y_cap))^2/(norm(y(1:T,1)-y_m'))^2 + reg;
+J = (norm(y(1:T)-y_cap))^2/(norm(y(1:T)-y_m'))^2 + reg;
+%J = (norm(y(1:T)-y_cap))^2/(norm(y(1:T)-mean(y(1:T))))^2 + reg;
