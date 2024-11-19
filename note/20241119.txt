@@ -1,0 +1,6 @@
+Sistemato stima parametri modello non lineare. 
+Sistemato calcolo media vettore y.
+
+Caricato dataset messori per confronto parametri stimati con paper + utilizzo dataset messori per validazione
+
+Giocato con parametri alfa per regolarizzazione per migliorare GoF
