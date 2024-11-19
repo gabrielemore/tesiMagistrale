@@ -31,17 +31,7 @@ for k=1:T
     %sistema lineare
     x(:,k+1) = x(:,k) + Ts*(A*x(:,k) + B_u*u(k) + B_r*r(k) + E);
     y_cap(k)=C*x(:,k);
-    
-    % costruzione vettore media al tempo k
-    y_m(k)=mean(y(1:k));
-    
-    % %versione lenta, risultati simili a J fuori dal ciclo
-    % if k==1
-    %     J=0;
-    % else
-    %     J = J + (norm(y(1:k)-y_cap(1:k)))^2/(norm(y(1:k)-mean(y(1:k))))^2 + reg;
-    % end
+   
 end
 
-J = (norm(y(1:T)-y_cap))^2/(norm(y(1:T)-y_m'))^2 + reg;
-%J = (norm(y(1:T)-y_cap))^2/(norm(y(1:T)-mean(y(1:T))))^2 + reg;
+J = (norm(y(1:T)-y_cap))^2/(norm(y(1:T)-mean(y(1:T))))^2 + reg;

@@ -24,36 +24,34 @@ reg= o_0*alfa*o_0';
 x(:,1) = x0;
 y_cap = zeros(T,1);
 
-for k=1:T
+i = 1:T;
+%baseline insulin sensitivity
+Si_tar = x0(6)*(1+o8*sin((2*pi*i*Ts)/(60*24) + 2*pi*o9)); % x0(6)=CF
+%non abbiamo G_b fisso ma variabile 
+G_basal = (o0-Si_tar*x0(2))/o1; %x0(2)=Ub;
 
-    %baseline insulin sensitivity
-    Si_tar(k) = x0(6)*(1+o8*sin((2*pi*k*Ts)/(60*24) + 2*pi*o9)); % x0(6)=CF
+for k=1:T
     
     %deviation of gluscose from its basal
-    %non abbiamo G_b fisso ma varia 
-    G_basal(k) = (o0-Si_tar(k)*x0(2))/o1; %x0(2)=Ub;
     deltaG(k) = x(1,k) - G_basal(k);
 
     %deviation of IOB from its basal
     IOB(k) = o3*(x(2,k) + x(3,k));
     deltaIOB(k) = IOB(k) - IOB_basal;
-    
+
     %sistema non lineare
     x_dot(1)= o0 - (o1*x(1,k)) - (x(6,k)*x(2,k)) + (o2*x(4,k)); %G
     x_dot(2)= -(1/o3 * x(2,k)) + (1/o3 * x(3,k)); %Qi
     x_dot(3)= -(1/o3 * x(3,k)) + (1/o3 * u(k)); %Qisub
-    x_dot(4)= -(1/o4 * x(4,k)) + (1/o4 * x(5,k)); % Qg
+    x_dot(4)= -(1/o4 * x(4,k)) + (1/o4 * x(5,k)); %Qg
     x_dot(5)= -(1/o4 * x(5,k)) + (1/o4 * r(k)); %Qsto
-    x_dot(6)= -(1/o5 * x(6,k)) -(1/o6 * deltaG(k)) - (1/o7 * deltaIOB(k)) + (1/o5 * Si_tar(k)); %Si
+    x_dot(6)= -(1/o5 * x(6,k)) -(o1/o6 * deltaG(k)) - (1/o7 * deltaIOB(k)) + (1/o5 * Si_tar(k)); %Si
 
     %discretizzazione
     x(:,k+1) = x(:,k) + Ts*x_dot(:);
     
     y_cap(k) = x(1,k);
-
-    % costruzione vettore media al tempo k 
-    y_m(k) = mean(y(1:k));
    
 end
 
-J = (norm(y(1:T,1)-y_cap))^2/(norm(y(1:T,1)-y_m'))^2 + reg;
+J = (norm(y(1:T,1)-y_cap))^2/(norm(y(1:T,1)-mean(y(1:T))))^2 + reg;
