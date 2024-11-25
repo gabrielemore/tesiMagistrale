@@ -4,10 +4,16 @@ clc;
 close all;
 
 %% IMPORTAZIONE DATI
-%data_circadian_off = load("C:\Users\ITAPC\Documents\università\tesi MAGISTRALE\dati\Sim_gabriele_pasti_Circadian_off\Sim_gabriele_pasti_Circadian_off.mat");
 
-%messori
-data_circadian_off = load('C:\Users\ITAPC\Documents\università\tesi MAGISTRALE\dati\Messori\TrainingMessori_circDisabled.mat');
+dataset = 2;
+
+if dataset==1
+    %mio
+    data_circadian_off = load("C:\Users\ITAPC\Documents\università\tesi MAGISTRALE\dati\Sim_gabriele_pasti_Circadian_off\Sim_gabriele_pasti_Circadian_off.mat");
+else
+    %messori
+    data_circadian_off = load('C:\Users\ITAPC\Documents\università\tesi MAGISTRALE\dati\Messori\TrainingMessori_circDisabled.mat');
+end
 %% ESTRAZIONE DATI
 
 patient = 1;
@@ -33,7 +39,7 @@ inputs_subqInsulin_Normal_Bolus_Use=data_circadian_off.Subjects(patient).Signals
 u = inputs_subqInsulin_Normal_Basal_Use + inputs_subqInsulin_Normal_Bolus_Use;
 
 %r(t) - rate of carbohydrate(CHO) intake [mg]
-r=data_circadian_off.Subjects(11).Signals.inputs_mealCHO(2:end); 
+r=data_circadian_off.Subjects(patient).Signals.inputs_mealCHO(2:end); 
 
 %y(t) - sensor [mg/dl]
 y = data_circadian_off.Subjects(patient).Signals.Sensors__replace_me__(2:end);
@@ -71,9 +77,14 @@ o00 = o01*Gb + o02*Ub; % [mg/dL/min]
 theta0= [o00 o01 o02 o03 o04 o05]';
 
 %divisione dataset train e test
-%T_train=60*24*4;
-%diviosne dataset Messori
-T_train = 60*24*2;
+if dataset==1
+    %mio
+    T_train=60*24*4;
+else
+    %messori
+    T_train = 60*24*2;
+end
+
 %definizione tempo di campionamento
 Ts = 1;
 %stati iniziali

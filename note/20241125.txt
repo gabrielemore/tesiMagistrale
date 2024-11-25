@@ -1,0 +1,37 @@
+Tentativo cambio peso matrice alfa per migliorare GoF
+
+alfa = [ 1 1 1/th5^2]
+-> CR/CR_cap = 19.1612/19.1606 
+-> GoF train: 44.6237
+-> GoF test: 27.9264
+-----------------------
+alfa = [ 0.3 1 1/th5^2] 
+-> CR/CR_cap = 19.1612/19.1594
+-> GoF train: 44.6248
+-> GoF test: 27.9295
+-----------------------
+alfa = [ 0.3 0.5 1/th5^2] 
+-> CR/CR_cap = 19.1612/19.1594
+-> GoF train: 44.6194
+-> GoF test: 27.9155
+-----------------------
+alfa = [ 0.3 0.3 1/th5^2] 
+-> CR/CR_cap = 19.1612/19.1594
+-> GoF train: 44.628
+-> GoF test: 27.9327
+-----------------------
+alfa = [ 0.1 0.3 1/th5^2] 
+-> CR/CR_cap = 19.1612/19.156
+-> GoF train: 44.6331
+-> GoF test: 27.9467
+-----------------------
+
+
+Utilizzato dataset messori per confronto con paper
+
+Nel modello lineare esce GoF train maggiore di GoF test
+(torna minore nel modello non lineare)
+
+Stima parametri pazienti modello NL messori coerenti con paper tranne per parametri o8 e o9
+
+Validazione parametri ottenuti con il mio sistema su dataset messori validaiton per circ on e off

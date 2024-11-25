@@ -4,10 +4,16 @@ clc;
 close all;
 
 %% IMPORTAZIONE DATI
-%data_circadian_off = load("C:\Users\ITAPC\Documents\università\tesi MAGISTRALE\dati\Sim_gabriele_pasti_Circadian_on\Sim_gabriele_pasti_Circadian_on.mat");
 
-%messori
-data_circadian_off = load('C:\Users\ITAPC\Documents\università\tesi MAGISTRALE\dati\Messori\TrainingMessori_circEnabled.mat');
+dataset = 2;
+
+if dataset==1
+    %mio
+    data_circadian_off = load("C:\Users\ITAPC\Documents\università\tesi MAGISTRALE\dati\Sim_gabriele_pasti_Circadian_on\Sim_gabriele_pasti_Circadian_on.mat");
+else
+    %messori
+    data_circadian_off = load('C:\Users\ITAPC\Documents\università\tesi MAGISTRALE\dati\Messori\TrainingMessori_circEnabled.mat');
+end
 %% ESTRAZIONE DATI
 
 patient = 1;
@@ -30,7 +36,7 @@ inputs_subqInsulin_Normal_Bolus_Use=data_circadian_off.Subjects(patient).Signals
 u = inputs_subqInsulin_Normal_Basal_Use + inputs_subqInsulin_Normal_Bolus_Use;
 
 %r(t) - rate of carbohydrate(CHO) intake [mg]
-r=data_circadian_off.Subjects(11).Signals.inputs_mealCHO(2:end); 
+r=data_circadian_off.Subjects(patient).Signals.inputs_mealCHO(2:end); 
 
 %y(t) - sensor [mg/dl]
 y = data_circadian_off.Subjects(patient).Signals.Sensors__replace_me__(2:end);
@@ -72,9 +78,14 @@ o5=50; o6=25; o7=45; o8=1; o9=1;
 theta0= [o0 o1 o2 o3 o4 o5 o6 o7 o8 o9]';
 
 %divisione dataset train e test
-%T_train=60*24*4;
-%diviosne dataset Messori
-T_train = 60*24*3;
+if dataset==1
+    %mio
+    T_train=60*24*4;
+else
+    %messori
+    T_train = 60*24*3;
+end
+
 %definizione tempo di campionamento
 Ts = 1;
 %stati iniziali sistema NON lineare (aggiunto nuovo stato Si)
@@ -249,3 +260,6 @@ title(['Confronto Ra: Reale vs Stimato - Paziente ' num2str(patient)]);
 legend('show');
 set(gca, 'FontSize', 12);
 set(gcf, 'Color', 'white');
+
+%% SALVATAGGIO PARAMETRI SISTEMA LINEARE CIRCADIAN OFF
+save('parametri_circadian_on.mat', 'theta_ott_NL');
