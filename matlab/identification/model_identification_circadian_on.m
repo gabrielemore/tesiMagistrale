@@ -59,7 +59,7 @@ Ub = Ub_day/(24*60);
 Vg = 2.1143; % [dL/kg];
 Ra=Ra/Vg;
 %% CARICAMENTO PARAMETRI STIMATI SISTEMA LINEARE
-load('parametri_circadian_off.mat', 'theta_ott_ML');
+load('C:\Users\ITAPC\Documents\università\tesi MAGISTRALE\matlab\shared_data\parametri_circadian_off.mat', 'theta_ott_ML');
 
 %% STIMA PARAMETRI SISTEMA NON LINEARE
 %Parametri iniziali per stima parametri sistema non lineare
@@ -262,4 +262,4 @@ set(gca, 'FontSize', 12);
 set(gcf, 'Color', 'white');
 
 %% SALVATAGGIO PARAMETRI SISTEMA LINEARE CIRCADIAN OFF
-save('parametri_circadian_on.mat', 'theta_ott_NL');
+save('C:\Users\ITAPC\Documents\università\tesi MAGISTRALE\matlab\shared_data\parametri_circadian_on.mat', 'theta_ott_NL');

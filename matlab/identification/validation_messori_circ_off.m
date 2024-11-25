@@ -5,7 +5,7 @@ close all;
 
 %% IMPORTAZIONE DATI
 %messori
-data_circadian_off = load('C:\Users\ITAPC\Documents\università\tesi MAGISTRALE\dati\Messori\ValidationMessori_circ.mat');
+data_circadian_off = load('C:\Users\ITAPC\Documents\università\tesi MAGISTRALE\dati\Messori\ValidationMessori_circDisabled.mat');
 
 %% ESTRAZIONE DATI
 
@@ -57,69 +57,43 @@ Vg = 2.1143; % [dL/kg];
 Ra=Ra/Vg;
 
 %% CARICAMENTO PARAMETRI STIMATI SISTEMA LINEARE
-load('parametri_circadian_on.mat', 'theta_ott_NL');
+load('C:\Users\ITAPC\Documents\università\tesi MAGISTRALE\matlab\shared_data\parametri_circadian_off.mat', 'theta_ott_ML');
 
-%% PARAMETRI OTTIMI SISTEMA NON LINEARE
+%% DEFINIZIONE SISTEMA LINEARE
 
-o0=theta_ott_NL(1);
-o1=theta_ott_NL(2);
-o2=theta_ott_NL(3);
-o3=theta_ott_NL(4);
-o4=theta_ott_NL(5);
-o5=theta_ott_NL(6);
-o6=theta_ott_NL(7);
-o7=theta_ott_NL(8);
-o8=theta_ott_NL(9);
-o9=theta_ott_NL(10);
+o0=theta_ott_ML(1);
+o1=theta_ott_ML(2);
+o2=theta_ott_ML(3);
+o3=theta_ott_ML(4);
+o4=theta_ott_ML(5);
+o5=theta_ott_ML(6);
 
-%% SIMULAZIONE SISTEMA NON LINEARE CON PARAMETRI STIMATI
+%Definizione sistema lineare in forma matriciale
+A = [-o1 -o2 0 o3 0;0 -1/o4 1/o4 0 0;0 0 -1/o4 0 0; 0 0 0 -1/o5 1/o5; 0 0 0 0 -1/o5];
+B_u= [0 0 1/o4 0 0]';
+B_r= [0 0 0 0 1/o5]';
+E=[o0 0 0 0 0]';
+C=[1 0 0 0 0];
 
+%% SIMULAZIONE SISTEMA LINEARE CON PARAMETRI STIMATI
+
+%stati iniziali
+x0=[Gb Ub Ub 0 0]';
 %definizione tempo di campionamento
 Ts = 1;
-%stati iniziali sistema NON lineare (aggiunto nuovo stato Si)
-x0=[Gb Ub Ub 0 0 CF]';
 
-%IOB basal
-IOB_basal=2*x0(2)*o3; %x0(2)=Ub
-
-x(:,1) = x0;
-y_cap = zeros(time,1);
-
-i = 1:time;
-%baseline insulin sensitivity
-Si_tar = x0(6)*(1+o8*sin((2*pi*i*Ts)/(60*24) + 2*pi*o9)); % x0(6)=CF
-%non abbiamo G_b fisso ma variabile 
-G_basal = (o0-Si_tar*x0(2))/o1; %x0(2)=Ub;
-
+x(:,1)=x0;
 for k=1:time
-    
-    %deviation of gluscose from its basal
-    deltaG(k) = x(1,k) - G_basal(k);
-
-    %deviation of IOB from its basal
-    IOB(k) = o3*(x(2,k) + x(3,k));
-    deltaIOB(k) = IOB(k) - IOB_basal;
-
-    %sistema non lineare
-    x_dot(1)= o0 - (o1*x(1,k)) - (x(6,k)*x(2,k)) + (o2*x(4,k)); %G
-    x_dot(2)= -(1/o3 * x(2,k)) + (1/o3 * x(3,k)); %Qi
-    x_dot(3)= -(1/o3 * x(3,k)) + (1/o3 * u(k)); %Qisub
-    x_dot(4)= -(1/o4 * x(4,k)) + (1/o4 * x(5,k)); %Qg
-    x_dot(5)= -(1/o4 * x(5,k)) + (1/o4 * r(k)); %Qsto
-    x_dot(6)= -(1/o5 * x(6,k)) -(o1/o6 * deltaG(k)) - (1/o7 * deltaIOB(k)) + (1/o5 * Si_tar(k)); %Si
-
-    %discretizzazione
-    x(:,k+1) = x(:,k) + Ts*x_dot(:);
-    
-    y_cap(k) = x(1,k);
-   
+    %sistema lineare
+    x(:,k+1) = x(:,k) + Ts*(A*x(:,k) + B_u*u(k) + B_r*r(k) + E);
+    y_cap(k)=C*x(:,k);
 end
 
 %% METRICHE GoF
 
 disp("-------------");
-GoF = 100*(1 - (norm(y(1:time)- y_cap(1:time)))/(norm(y(1:time) - mean(y(1:time)))));
-disp("GoF messori circ on: " + GoF );
+GoF = 100*(1 - (norm(y(1:time)- y_cap(1:time)'))/(norm(y(1:time) - mean(y(1:time)))));
+disp("GoF messori circ off: " + GoF );
 disp("-------------");
 
 %% CONFRONTO GRAFICO
@@ -144,7 +118,7 @@ set(gcf, 'Color', 'white');
 
 %------------IOB------------
 %calcolo IOB_cap
-IOB_cap = o3*(x(2,:) + x(3,:));
+IOB_cap = o4*(x(2,:) + x(3,:));
 
 figure('Name', ['Confronto IOB: Reale vs Stimato - Paziente ' num2str(patient)]);
 % Plot dei dati 
@@ -164,7 +138,7 @@ set(gcf, 'Color', 'white');
 
 %-----------Ra-------------
 %calcolo Ra_cap
-Ra_cap = o2*x(4,:);
+Ra_cap = o3*x(4,:);
 
 figure('Name', ['Confronto Ra: Reale vs Stimato - Paziente ' num2str(patient)]);
 % Plot dei dati 
