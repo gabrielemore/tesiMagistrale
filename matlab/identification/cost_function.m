@@ -16,7 +16,6 @@ alfa = diag([1,1,1/theta0(6)^2]);
 %regularizaiton term
 reg= o_0*alfa*o_0';
 
-
 %Definizione sistema lineare in forma matriciale
 A = [-o1 -o2 0 o3 0;0 -1/o4 1/o4 0 0;0 0 -1/o4 0 0; 0 0 0 -1/o5 1/o5; 0 0 0 0 -1/o5];
 B_u= [0 0 1/o4 0 0]';

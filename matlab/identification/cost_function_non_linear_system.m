@@ -23,15 +23,17 @@ reg= o_0*alfa*o_0';
    
 x(:,1) = x0;
 y_cap = zeros(T,1);
+deltaG = zeros(T,1);
+deltaIOB = zeros(T,1);
+IOB = zeros(T,1);
 
 i = 1:T;
 %baseline insulin sensitivity
-Si_tar = x0(6)*(1+o8*sin((2*pi*i*Ts)/(60*24) + 2*pi*o9)); % x0(6)=CF
+Si_tar = x0(6)*(1+0.01*o8*sin((2*pi*i*Ts)/(60*24) + 2*pi*0.01*o9)); % x0(6)=CF
 %non abbiamo G_b fisso ma variabile 
 G_basal = (o0-Si_tar*x0(2))/o1; %x0(2)=Ub;
 
 for k=1:T
-    
     %deviation of gluscose from its basal
     deltaG(k) = x(1,k) - G_basal(k);
 

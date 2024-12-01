@@ -1,0 +1,10 @@
+Modificato struttura del codice. 
+Trasformato script in funzioni e creato un unico main che richiama le varie funzioni (identificazione ML, NL, estraizone dati etc..)
+
+Corretto errore sovrascrittura IOB che rendeva IOB_cap uguale a IOB nel plot
+
+Aggiunto identificazione modello a 5 stati su dataset con circadian attiva 
+
+Aggiunto confronto grafico CGM,IOB,Ra modello 5 stati(identificato su dataset circ on) e modello 6 stati
+
+Eliminato cartella shared data dato che i parametri vengono ora inviati come funzioni
