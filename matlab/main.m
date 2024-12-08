@@ -43,8 +43,11 @@ comparison_ML_NL_circON(data_circadian_on_MIO,patient,theta_ott_ML_circ_ON,theta
 
 %% VALIDAZIONE CON DATASET MESSORI
 disp('VALIDAZIONE MESSORI 5 STATI - DATASET CIRCADIAN OFF')
-validation_messori_circ_off(data_circadian_off_MESSORI_val,patient,theta_ott_ML,true);
+validation_messori_circ_off(data_circadian_off_MESSORI_val,patient,theta_ott_ML,false);
 disp('VALIDAZIONE MESSORI 5 STATI - DATASET CIRCADIAN ON')
-validation_messori_circ_off(data_circadian_on_MESSORI_val,patient,theta_ott_ML_circ_ON,true);
+validation_messori_circ_off(data_circadian_on_MESSORI_val,patient,theta_ott_ML_circ_ON,false);
 disp('VALIDAZIONE MESSORI 6 STATI - DATASET CIRCADIAN ON')
-validation_messori_circ_on(data_circadian_on_MESSORI_val,patient,theta_ott_NL,true);
+validation_messori_circ_on(data_circadian_on_MESSORI_val,patient,theta_ott_NL,false);
+
+%% CONTROLLO MODELLO LINEARE
+control_linear_model(data_circadian_off_MIO,patient,theta_ott_ML,5,1);
