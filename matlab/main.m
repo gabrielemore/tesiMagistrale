@@ -50,4 +50,5 @@ disp('VALIDAZIONE MESSORI 6 STATI - DATASET CIRCADIAN ON')
 validation_messori_circ_on(data_circadian_on_MESSORI_val,patient,theta_ott_NL,false);
 
 %% CONTROLLO MODELLO LINEARE
+%T=5 e deltaT=1
 control_linear_model(data_circadian_off_MIO,patient,theta_ott_ML,5,1);

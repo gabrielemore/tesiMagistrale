@@ -1,0 +1,15 @@
+Corretto errore di discretizzazione matrici
+
+definito con un vettore IOB_bound limiti dipendenti dal tempo IOB. Alla funzione MPC viene mandato il "pezzetto" relativo all'orrizonte temporale di predizone. Rimane da verificare l'efficacia e la gestione dei 5 minuti di predizione del MPC 
+
+NB: MPC cosi formulato è studiato per fare predizioni ogni 5 minuti, quindi elementi vicini di u corrispondono al controllo ogni 5 minuti
+
+Corretto errore equaizone di riccati. Non uso Q ma sigma (da help dlqe la Q corrisponde al E(ww') e non a G. La Q_kf del paper la uso all'interno di ODO. 
+
+Rimane da capire come inizializzare alcuni valori alla prima iterazione della simulazione, in particolare y
+
+Rimane da fare la divisione nel ciclo tra MPC ogni 5 minuti ed evoluzione del sistema ogni minuto
+
+Da testare r(pasti) diversi da 0
+
+Da gestire i salvattaggi di tutte le variabili per controllo correttezza
