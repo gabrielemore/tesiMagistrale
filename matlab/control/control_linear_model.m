@@ -154,17 +154,20 @@ R_kf = sigma_q_cgm;
 [~,Pkk,~,~] = dlqe(Aaug,G,Caug,sigma_q,R_kf);
 
 %% SIMULZIONE
-vx=[];
-vu=[];
-vys=[];
-vexit=[];
-vVN=[];
-Vn=0;
+% vx=[];
+% vu=[];
+% vys=[];
+% vexit=[];
+% vVN=[];
+% Vn=0;
+vx_sim=[];
 
-Tmax = 1440; % tempo massimo di simulazione (1 giorno)
+%tempo di simulazione (1 giorno)
+Tmax = 1440;
 
-x0=[Gb Ub Ub 0 0]';
-u0 =0;
+%condizioni iniziali
+x0 = [Gb Ub Ub 0 0]';
+u0 = 0;
 
 %costruzione upper-lower bound IOB + 6h
 IOB_vet = zeros(1,1800);
@@ -175,59 +178,60 @@ IOB_vet(1321:1440) = IOB_s;
 IOB_vet(1441:1800) = IOB_s;
 
 %simulazione pasti
-rk = zeros(1,N);
+rk = zeros(1,Tmax);%da corregere, dovrebbe essere fino a 1440 e poi mando di volta in volta 72 elementi a MPC
 
 %osservatore
 x_aug = [x0;0;0];
 u_aug = [u0;rk(1);1];
-%??
 y=x0(1);
 
-vys=[vys,xk(1)];
-vx=[vx,xk];
+%insulina da iniettare
+u_in = 0;
+
+%intervallo simulazione ode45
+tspan = [0 1];
+%inizializzo primo stato sistema
+x_real = x0;
+ 
+% vys=[vys,xk(1)];
+% vx=[vx,xk];
 
 for k=1:Tmax
 
-    %stima x0 con osservatore
-    [xk_obs,Pkk]=ODO(Aaug,Baug,Caug,y,x_aug,u_aug,Pkk,Q_kf,R_kf);
-    xk = xk_obs(1:5);
-    [uf_sol,xf_sol,V_sol]=MPC(xk,rk,IOB_vet(k:Ts:k+N*Ts));
+    if mod(k,Ts) == 0
+        %stima x0 con osservatore
+        [xk_obs,Pkk]=ODO(Aaug,Baug,Caug,y,x_aug,u_aug,Pkk,Q_kf,R_kf);
+        %non considero i disturbi per MPC
+        xk = xk_obs(1:5);
+        %risolvo il problema di minimizzazione al passo k
+        [uf_sol,xf_sol,V_sol]=MPC(xk,rk(k:Ts:k+N*Ts-1),IOB_vet(k:Ts:k+N*Ts));
 
-    exit=get_stats(MPC);
-    vexit=[vexit,exit.success];
+        % exit=get_stats(MPC);
+        % vexit=[vexit,exit.success];
 
-    %converto risultato simbolico in risultato numerico
-    uf=full(uf_sol);
-    xf=full(xf_sol);
-    Vn=full(V_sol);
+        %converto risultato simbolico in risultato numerico
+        uf=full(uf_sol);
+        % xf=full(xf_sol);
+        % Vn=full(V_sol);
 
-    % prendo solo il primo elemento di uf ottima e lo applico al sistema
-    uk=uf(:,1);
-    x_sis=full(sis(xk,uk,rk)); % faccio avanzare il sistema
-
-    % stimo lo stato iniziale sucessivo con osservatore
-    u_aug = [uk;rk(k);1];
-    y=x_sis(1);%unica misura che sono in grado di effettuare è x1
-    [x_aug,Pkk] = ODO(Aaug,Baug,C_d,y,x_aug,u_aug,Pkk);
-
-    xk=x_aug(1:5);%stato stimato dall'osservatore
-
-    vx=[vx,xk];
-    vu=[vu,uk];
-    vVN=[vVN,Vn];
+        % prendo solo il primo elemento di uf ottima e lo applico al sistema
+        u_in=uf(:,1);
+        %valori aug per prossima iterazione aggiornati
+        x_aug = xk_obs;
+        u_aug = [u_in;rk(k);1];
+    end
+    
+    %avanzamento sistema reale
+    [tt,x_sim] = ode45(@(t, x) patient_fun(t, x, A, B_u, B_r, E, u_in, rk(k)), tspan, x_real);
+    % Prendo l'ultimo stato
+    x_real = x_sim(end, :)'; 
+    %unica misura che sono in grado di effettuare è x1
+    y=x_real(1);
+    %azzero ingresso per ciclo sucessivo
+    u_in = 0;
+    %salvo in un vettore x ottenuti dalla simulazione del sistema reale
+    vx_sim=[vx_sim;x_sim];
 end
-
-
-figure
-plot(vys(1,:))
-hold on
-plot(vx(1,:))
-figure
-plot(vVN)
-figure
-plot(vu(1,:))
-hold on
-plot(vu(2,:))
 
 end
 

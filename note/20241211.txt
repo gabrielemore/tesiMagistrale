@@ -1,0 +1,4 @@
+Iniziato sviluppo simulazione con divisione parte di contollo MPC (ogni 5 minuti) e simulazione sistema ogni minuto (ad ogni ciclo). 
+
+Da gestire salvataggio di tutte le varibili intermedie.
+Capire perchè ad un certo punto la glicemia diventa negativa.
