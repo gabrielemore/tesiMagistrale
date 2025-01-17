@@ -1,0 +1,3 @@
+DA FARE:
+far passare tutte le variabili del file control..
+scrivere anche le dimensioni e il tipo di dato che contengono
