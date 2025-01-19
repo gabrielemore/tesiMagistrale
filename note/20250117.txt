@@ -1,0 +1,8 @@
+Sistemato discrepanza osservatore paper Abudin
+Aggiunto variabili slack a stati x1 e IOB
+
+Iniziato a rendere dinamica la costruzione del vettore IOB (da finire)
+
+Iniziato simulazione assunzione pasti. Ce da sistemare il fatto che l'osservatore non possa vedere i pasti successivi ma solo il primo (probabilmente anche il controllore non puo. Aggiugnere quindi un if)
+
+Manca da stampare i grafici

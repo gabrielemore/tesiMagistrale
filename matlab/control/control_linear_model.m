@@ -201,8 +201,8 @@ v_delta_ipo = [];
 v_delta_iper = [];
 v_xk_obs =[];
 
-%tempo di simulazione (1 giorno)
-Tmax = 1440;
+%tempo di simulazione in minuti
+Tmax = 24*60*1;
 
 %ipotesi iniziali
 x0 = [Gb Ub Ub 0 0]';
@@ -212,8 +212,8 @@ u0 = 0;
 IOB_vet = create_IOB_vector(Tmax,IOB_s,IOB_d);
 
 %simulazione pasti (1 giorno + 6h) (da rendere dinamico)
-rk_sim = zeros(1,1800);
-rk_sim(800:829) = 60/30;
+rk_in = zeros(1,1800);
+rk_in(801:830) = 60/30;
 
 %insulina da iniettare
 u_in = 0;
@@ -238,9 +238,20 @@ for k=1:Tmax
         %non considero i disturbi per MPC (prendo solo i primi 5 stati)
         xk_sim = xk_obs(1:5);
         
+        %costruzione vettore rk_sim
+        if rk_in(k)~=0
+            %rk_sim=rk_in(k:Ts:k+N*Ts-1);
+            %MPC non puo vedere pasti futuri (a k futuri da quello corrente)
+            %costruisco rk MPC di conseguenza
+            rk_sim(1)=rk_in(k);
+            rk_sim(2:N-1)=zeros(1,N-2);
+        else
+            rk_sim=zeros(1,N);
+        end
+
         %MPC
         %risolvo il problema di minimizzazione al passo k
-        [uf_sol,xf_sol,V_sol,d_ipo,d_iper]=MPC(xk_sim,rk_sim(k:Ts:k+N*Ts-1),IOB_vet(k:Ts:k+N*Ts));
+        [uf_sol,xf_sol,V_sol,d_ipo,d_iper]=MPC(xk_sim,rk_sim,IOB_vet(k:Ts:k+N*Ts));
         %verifico exit MPC
         exit=get_stats(MPC);
         if exit.success==1
@@ -249,7 +260,7 @@ for k=1:Tmax
             % prendo solo il primo elemento di uf ottima e lo applico al sistema
             u_in=uf_sim(1);
         else
-            %se non trovo una soluzione ottima utilizza la soluzione al
+            %se non trovo una soluzione ottima utilizzo la soluzione al
             %passo precedente
             u_in=u_aug(1);
         end
@@ -280,11 +291,11 @@ for k=1:Tmax
 
         %aggiorno valori aug per prossima iterazione MPC
         x_aug = xk_obs;
-        u_aug = [u_in;rk_sim(k);1];
+        u_aug = [u_in;rk_in(k);1];
     end
 
     %avanzamento sistema reale
-    [tt,x_sim] = ode45(@(t, x) patient_fun(t, x, A, B_u, B_r, E, u_in, rk_sim(k)), tspan, x_real);
+    [tt,x_sim] = ode45(@(t, x) patient_fun(t, x, A, B_u, B_r, E, u_in, rk_in(k)), tspan, x_real);
     % Prendo l'ultimo stato
     x_real = x_sim(end, :)';
     %unica misura che sono in grado di effettuare è x1
@@ -303,8 +314,79 @@ for k=1:Tmax
     %vettore uscite y
     v_y = [v_y;y];
 end
-%plot 
 
-disp('test');
+%% TEST - salvattaggio vettori per grafici
+% Salva i vettori in un file MAT
+save('dati_intermedi.mat', 'v_xf', 'v_u', 'v_y', 'v_exit', 'v_VN', ...
+     'v_x_sim', 'v_tt', 'v_pkk', 'v_kk', 'v_d1', 'v_d2', ...
+     'v_delta_ipo', 'v_delta_iper', 'v_xk_obs');
+
+%% GRAFICI
+
+load('dati_intermedi.mat');
+
+%glicemia
+figure('Name', ['Controllo MPC - Paziente ' num2str(patient)]);
+subplot(5, 1, 1); 
+% Plot dei dati 
+plot(v_y(1:Ts:end), 'r-', 'LineWidth', 1.5, 'DisplayName', 'Glicemia reale');
+hold on;
+plot(v_xk_obs(1), 'k-', 'LineWidth', 1.5, 'DisplayName', 'Glicemia osservata (ODO)');
+
+hold off;
+grid on;
+xlim([0, time]);
+
+xlabel('Tempo [min]');
+ylabel('y [mg/dL]');
+title(['Glicemia - Paziente ' num2str(patient)]);
+legend('show');
+set(gca, 'FontSize', 12);
+set(gcf, 'Color', 'white');
+
+% %------------IOB------------
+% %calcolo IOB_cap
+% IOB_cap_ML = theta_ott_ML(5)*(x_ML(2,:) + x_ML(3,:));
+% %IOB_cap_NL = theta_ott_NL(4)*(x_NL(2,:) + x_NL(3,:));
+% IOB_cap_NL = IOB_NL; % già calcolato nella sim. del sistema per deltaIOB
+% 
+% % Plot dei dati 
+% subplot(3, 1, 2); 
+% plot(1:1:time, IOB(1:time), 'r--', 'LineWidth', 1.5, 'DisplayName', 'IOB Reale');
+% hold on;
+% plot(1:1:time, IOB_cap_NL(1:time), 'k-', 'LineWidth', 1.5, 'DisplayName', 'IOB NL');
+% plot(1:1:time, IOB_cap_ML(1:time), 'b-', 'LineWidth', 1.5, 'DisplayName', 'IOB ML');
+% 
+% hold off;
+% grid on;
+% xlim([0, time]);
+% xlabel('Tempo [min]');
+% ylabel('IOB [U]');
+% title(['Confronto IOB: ML vs NL - Paziente ' num2str(patient)]);
+% legend('show');
+% set(gca, 'FontSize', 12);
+% set(gcf, 'Color', 'white');
+% 
+% %-----------Ra-------------
+% %calcolo Ra_cap
+% Ra_cap_ML = theta_ott_ML(4)*x_ML(4,:);
+% Ra_cap_NL = theta_ott_NL(3)*x_NL(4,:);
+% 
+% % Plot dei dati 
+% subplot(3, 1, 3); 
+% plot(1:1:time, Ra(1:time), 'r--', 'LineWidth', 1.5, 'DisplayName', 'Ra Reale');
+% hold on;
+% plot(1:1:time, Ra_cap_NL(1:time), 'k-', 'LineWidth', 1.5, 'DisplayName', 'Ra NL');
+% plot(1:1:time, Ra_cap_ML(1:time), 'b-', 'LineWidth', 1.5, 'DisplayName', 'Ra ML');
+% 
+% hold off;
+% grid on;
+% xlim([0, time]);
+% xlabel('Tempo [min]');
+% ylabel('Ra [mg/(dl\cdotmin)]');
+% title(['Confronto Ra: ML vs NL - Paziente ' num2str(patient)]);
+% legend('show');
+% set(gca, 'FontSize', 12);
+% set(gcf, 'Color', 'white');
 end
 
