@@ -1,0 +1,7 @@
+Sistemato problema convergenza disturbo d1 (errore offset creazione rk pensando a multipli di 5 ma ciclo entra in MPC a k-1 per poter entrare dall'inizio k=1. Quindi sistemato vettore rk con inizio pranzo a multipli di 5 +1)
+
+Sistemata funzione creazione vettore IOB dinamico in base ai minuti dati in input
+
+Sistemata visibilita pasti futuri a k in MPC con due soluzioni diverse
+
+Iniziato a creare parte plot grafici dei risultati

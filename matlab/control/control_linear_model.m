@@ -200,6 +200,7 @@ v_d2 =[];
 v_delta_ipo = [];
 v_delta_iper = [];
 v_xk_obs =[];
+v_x_real =[];
 
 %tempo di simulazione in minuti
 Tmax = 24*60*1;
@@ -313,80 +314,124 @@ for k=1:Tmax
     v_tt=[v_tt; tt(1:end-1) + (k-1)];
     %vettore uscite y
     v_y = [v_y;y];
+    %vettore x real
+    v_x_real = [v_x_real x_real];
 end
 
 %% TEST - salvattaggio vettori per grafici
 % Salva i vettori in un file MAT
 save('dati_intermedi.mat', 'v_xf', 'v_u', 'v_y', 'v_exit', 'v_VN', ...
      'v_x_sim', 'v_tt', 'v_pkk', 'v_kk', 'v_d1', 'v_d2', ...
-     'v_delta_ipo', 'v_delta_iper', 'v_xk_obs');
+     'v_delta_ipo', 'v_delta_iper', 'v_xk_obs','v_x_real','IOB_vet','rk_in');
 
 %% GRAFICI
 
-load('dati_intermedi.mat');
-
-%glicemia
 figure('Name', ['Controllo MPC - Paziente ' num2str(patient)]);
+
+%---------GLICEMIA---------
 subplot(5, 1, 1); 
 % Plot dei dati 
-plot(v_y(1:Ts:end), 'r-', 'LineWidth', 1.5, 'DisplayName', 'Glicemia reale');
+plot(v_y(1:Ts:end), 'r-', 'LineWidth', 1, 'DisplayName', 'Glicemia reale');
 hold on;
-plot(v_xk_obs(1), 'k-', 'LineWidth', 1.5, 'DisplayName', 'Glicemia osservata (ODO)');
+plot(v_xk_obs(1,:), 'b-', 'LineWidth', 1, 'DisplayName', 'Glicemia osservatore (ODO)');
 
 hold off;
 grid on;
-xlim([0, time]);
-
-xlabel('Tempo [min]');
-ylabel('y [mg/dL]');
+xlim([1, length(v_xk_obs)]);
+ylim([50, 310]);
+xlabel('Istanti [min]');
+ylabel('Glicemia [mg/dL]');
 title(['Glicemia - Paziente ' num2str(patient)]);
 legend('show');
 set(gca, 'FontSize', 12);
 set(gcf, 'Color', 'white');
 
-% %------------IOB------------
-% %calcolo IOB_cap
-% IOB_cap_ML = theta_ott_ML(5)*(x_ML(2,:) + x_ML(3,:));
-% %IOB_cap_NL = theta_ott_NL(4)*(x_NL(2,:) + x_NL(3,:));
-% IOB_cap_NL = IOB_NL; % già calcolato nella sim. del sistema per deltaIOB
-% 
-% % Plot dei dati 
-% subplot(3, 1, 2); 
-% plot(1:1:time, IOB(1:time), 'r--', 'LineWidth', 1.5, 'DisplayName', 'IOB Reale');
-% hold on;
-% plot(1:1:time, IOB_cap_NL(1:time), 'k-', 'LineWidth', 1.5, 'DisplayName', 'IOB NL');
-% plot(1:1:time, IOB_cap_ML(1:time), 'b-', 'LineWidth', 1.5, 'DisplayName', 'IOB ML');
-% 
-% hold off;
-% grid on;
-% xlim([0, time]);
-% xlabel('Tempo [min]');
-% ylabel('IOB [U]');
-% title(['Confronto IOB: ML vs NL - Paziente ' num2str(patient)]);
-% legend('show');
-% set(gca, 'FontSize', 12);
-% set(gcf, 'Color', 'white');
-% 
-% %-----------Ra-------------
-% %calcolo Ra_cap
-% Ra_cap_ML = theta_ott_ML(4)*x_ML(4,:);
-% Ra_cap_NL = theta_ott_NL(3)*x_NL(4,:);
-% 
-% % Plot dei dati 
-% subplot(3, 1, 3); 
-% plot(1:1:time, Ra(1:time), 'r--', 'LineWidth', 1.5, 'DisplayName', 'Ra Reale');
-% hold on;
-% plot(1:1:time, Ra_cap_NL(1:time), 'k-', 'LineWidth', 1.5, 'DisplayName', 'Ra NL');
-% plot(1:1:time, Ra_cap_ML(1:time), 'b-', 'LineWidth', 1.5, 'DisplayName', 'Ra ML');
-% 
-% hold off;
-% grid on;
-% xlim([0, time]);
-% xlabel('Tempo [min]');
-% ylabel('Ra [mg/(dl\cdotmin)]');
-% title(['Confronto Ra: ML vs NL - Paziente ' num2str(patient)]);
-% legend('show');
-% set(gca, 'FontSize', 12);
-% set(gcf, 'Color', 'white');
-end
+%------------IOB------------
+%calcolo IOB_real
+IOB_obs = o4*(v_xk_obs(2,:) + v_xk_obs(3,:));
+IOB_real = o4*(v_x_real(2,:) + v_x_real(3,:));
 
+% Plot dei dati 
+subplot(5, 1, 2); 
+
+%asse sinistro
+yyaxis left;
+plot(IOB_vet(1:Ts:end), 'k--', 'LineWidth', 1, 'DisplayName', 'Vincolo IOB');
+hold on;
+plot(IOB_real(1:Ts:end), 'r-', 'LineWidth', 1, 'DisplayName', 'IOB reale');
+plot(IOB_obs, 'b-', 'LineWidth', 1, 'DisplayName', 'IOB osservatore (ODO)');
+ylabel('IOB [U]');
+
+%asse destro
+yyaxis right;
+stem(v_u(1:Ts:end),'g','filled','LineWidth', 1, 'DisplayName', 'Insulina iniettata','Marker', 'none');
+ylabel('Insulina [U/min]');
+
+hold off;
+grid on;
+xlim([1, length(IOB_obs)]);
+xlabel('Istanti [min]');
+
+title(['Confronto IOB: reale vs osservatore vs vincolo - Paziente ' num2str(patient)]);
+legend('show');
+set(gca, 'FontSize', 12);
+set(gcf, 'Color', 'white');
+
+%-----------Ra-------------
+%calcolo Ra_cap
+Ra_real = o3*v_x_real(4,:);
+Ra_obs = o3*v_xk_obs(4,:);
+
+% Plot dei dati 
+subplot(5, 1, 3); 
+
+%asse sinistro
+yyaxis left;
+plot(Ra_real(1:Ts:end), 'r-', 'LineWidth', 1, 'DisplayName', 'Ra reale');
+hold on;
+plot(Ra_obs, 'b-', 'LineWidth', 1, 'DisplayName', 'Ra osservatore (ODO)');
+ylabel('Ra [mg/(dl\cdotmin)]');
+
+%asse destro
+yyaxis right;
+plot(rk_in(1:Ts:end), 'k-', 'LineWidth', 1, 'DisplayName', 'Pasti');
+ylabel('Ingest [g/min]');
+
+hold off;
+grid on;
+xlim([0, length(v_xk_obs)]);
+ylim([0, 5]);
+xlabel('Istanti [min]');
+
+title(['Confronto Ra reale vs osservata - Paziente ' num2str(patient)]);
+legend('show');
+set(gca, 'FontSize', 12);
+set(gcf, 'Color', 'white'); 
+
+%-----------D1-------------
+% Plot dei dati 
+subplot(5, 1, 4); 
+plot(v_d1, 'b-', 'LineWidth', 1, 'DisplayName', 'Disturbo');
+
+grid on;
+xlim([0, length(v_d1)]);
+xlabel('Istanti [min]');
+ylabel('d_1');
+title(['Convergenza disturbo d_1 - Paziente ' num2str(patient)]);
+legend('show');
+set(gca, 'FontSize', 12);
+set(gcf, 'Color', 'white'); 
+
+%---------COSTO----------
+% Plot dei dati 
+subplot(5, 1, 5);
+plot(v_VN, 'b-', 'LineWidth', 1, 'DisplayName', 'Costo');
+
+grid on;
+xlim([0, length(v_VN)]);
+xlabel('Istanti [min]');
+ylabel('Vn');
+title(['Costo - Paziente ' num2str(patient)]);
+legend('show');
+set(gca, 'FontSize', 12);
+set(gcf, 'Color', 'white'); 
