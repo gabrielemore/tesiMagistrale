@@ -8,7 +8,7 @@ for i=1:m_tot
     %se orario giorno (6h-22h] -> IOB_d
     if mod(i,1440) > 360 && mod(i,1440)<=1320
         IOB_vet(i)=IOB_d;
-    %altrimenti ->IOB_s
+        %altrimenti ->IOB_s
     else
         IOB_vet(i)=IOB_s;
     end

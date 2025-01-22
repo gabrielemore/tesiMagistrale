@@ -49,12 +49,18 @@ validation_messori_circ_off(data_circadian_on_MESSORI_val,patient,theta_ott_ML_c
 disp('VALIDAZIONE MESSORI 6 STATI - DATASET CIRCADIAN ON')
 validation_messori_circ_on(data_circadian_on_MESSORI_val,patient,theta_ott_NL,false);
 
-%% CONTROLLO MODELLO LINEARE
-%T=5 e deltaT=1
-control_linear_model(data_circadian_off_MIO,patient,theta_ott_ML,5,1);
+%% VARIBIALI TEMPORALI per il CONTROLLO
+Ts = 5;
+deltaT = 1;
 
-% %% GRAFICI
-% 
+%% CONTROLLO MODELLO LINEARE
+control_linear_model(data_circadian_off_MIO,patient,theta_ott_ML,Ts,deltaT);
+
+%% CONTROLLO MODELLO NON LINEARE
+control_NON_linear_model(data_circadian_on_MIO,patient,theta_ott_NL,Ts,deltaT);
+
+%% GRAFICI
+%
 % load('dati_intermedi.mat');
 % Ts = 5;
 % o0=theta_ott_ML(1);
@@ -63,113 +69,78 @@ control_linear_model(data_circadian_off_MIO,patient,theta_ott_ML,5,1);
 % o3=theta_ott_ML(4);
 % o4=theta_ott_ML(5);
 % o5=theta_ott_ML(6);
-% 
+
 % figure('Name', ['Controllo MPC - Paziente ' num2str(patient)]);
-% 
+%
 % %---------GLICEMIA---------
-% subplot(5, 1, 1); 
-% % Plot dei dati 
+% subplot(5, 1, 1);
 % plot(v_y(1:Ts:end), 'r-', 'LineWidth', 1, 'DisplayName', 'Glicemia reale');
 % hold on;
 % plot(v_xk_obs(1,:), 'b-', 'LineWidth', 1, 'DisplayName', 'Glicemia osservatore (ODO)');
-% 
 % hold off;
 % grid on;
 % xlim([1, length(v_xk_obs)]);
-% ylim([50, 310]);
-% xlabel('Istanti [min]');
 % ylabel('Glicemia [mg/dL]');
-% title(['Glicemia - Paziente ' num2str(patient)]);
 % legend('show');
 % set(gca, 'FontSize', 12);
-% set(gcf, 'Color', 'white');
-% 
+%
 % %------------IOB------------
-% %calcolo IOB_real
 % IOB_obs = o4*(v_xk_obs(2,:) + v_xk_obs(3,:));
 % IOB_real = o4*(v_x_real(2,:) + v_x_real(3,:));
-% 
-% % Plot dei dati 
-% subplot(5, 1, 2); 
-% 
-% %asse sinistro
+% subplot(5, 1, 2);
 % yyaxis left;
 % plot(IOB_vet(1:Ts:end), 'k--', 'LineWidth', 1, 'DisplayName', 'Vincolo IOB');
 % hold on;
 % plot(IOB_real(1:Ts:end), 'r-', 'LineWidth', 1, 'DisplayName', 'IOB reale');
 % plot(IOB_obs, 'b-', 'LineWidth', 1, 'DisplayName', 'IOB osservatore (ODO)');
 % ylabel('IOB [U]');
-% 
-% %asse destro
 % yyaxis right;
-% stem(v_u(1:Ts:end),'g','filled','LineWidth', 1, 'DisplayName', 'Insulina iniettata','Marker', 'none');
+% stem(v_u(1:Ts:end), 'g', 'filled', 'LineWidth', 1, 'DisplayName', 'Insulina iniettata', 'Marker', 'none');
 % ylabel('Insulina [U/min]');
-% 
 % hold off;
 % grid on;
 % xlim([1, length(IOB_obs)]);
-% xlabel('Istanti [min]');
-% 
-% title(['Confronto IOB: reale vs osservatore vs vincolo - Paziente ' num2str(patient)]);
 % legend('show');
 % set(gca, 'FontSize', 12);
-% set(gcf, 'Color', 'white');
-% 
+%
 % %-----------Ra-------------
-% %calcolo Ra_cap
 % Ra_real = o3*v_x_real(4,:);
 % Ra_obs = o3*v_xk_obs(4,:);
-% 
-% % Plot dei dati 
-% subplot(5, 1, 3); 
-% 
-% %asse sinistro
+% subplot(5, 1, 3);
 % yyaxis left;
 % plot(Ra_real(1:Ts:end), 'r-', 'LineWidth', 1, 'DisplayName', 'Ra reale');
 % hold on;
 % plot(Ra_obs, 'b-', 'LineWidth', 1, 'DisplayName', 'Ra osservatore (ODO)');
 % ylabel('Ra [mg/(dl\cdotmin)]');
-% 
-% %asse destro
 % yyaxis right;
 % plot(rk_in(1:Ts:end), 'k-', 'LineWidth', 1, 'DisplayName', 'Pasti');
 % ylabel('Ingest [g/min]');
-% 
 % hold off;
 % grid on;
 % xlim([0, length(v_xk_obs)]);
 % ylim([0, 5]);
-% xlabel('Istanti [min]');
-% 
-% title(['Confronto Ra reale vs osservata - Paziente ' num2str(patient)]);
 % legend('show');
 % set(gca, 'FontSize', 12);
-% set(gcf, 'Color', 'white'); 
-% 
+%
 % %-----------D1-------------
-% % Plot dei dati 
-% subplot(5, 1, 4); 
+% subplot(5, 1, 4);
 % plot(v_d1, 'b-', 'LineWidth', 1, 'DisplayName', 'Disturbo');
-% 
 % grid on;
 % xlim([0, length(v_d1)]);
-% xlabel('Istanti [min]');
 % ylabel('d_1');
-% title(['Convergenza disturbo d_1 - Paziente ' num2str(patient)]);
 % legend('show');
 % set(gca, 'FontSize', 12);
-% set(gcf, 'Color', 'white'); 
-% 
+%
 % %---------COSTO----------
-% % Plot dei dati 
 % subplot(5, 1, 5);
 % plot(v_VN, 'b-', 'LineWidth', 1, 'DisplayName', 'Costo');
-% 
 % grid on;
 % xlim([0, length(v_VN)]);
+% %Etichetta asse X in comune
 % xlabel('Istanti [min]');
 % ylabel('Vn');
-% title(['Costo - Paziente ' num2str(patient)]);
 % legend('show');
 % set(gca, 'FontSize', 12);
-% set(gcf, 'Color', 'white'); 
+%
+% %Sfondo bianco per l'intera figura
+% set(gcf, 'Color', 'white');

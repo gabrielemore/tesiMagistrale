@@ -1,4 +1,4 @@
-function control_linear_model(data_circadian,patient,theta_ott_ML,Ts,deltaT)
+function control_NON_linear_model(data_circadian,patient,theta_ott_NL,Ts,deltaT)
 %% IMPORT CASADI
 import casadi.*
 
@@ -6,14 +6,18 @@ import casadi.*
 [~,Gb,~,~,Ub,~,~,~,~,~] = data_extraction(data_circadian,patient);
 
 %% DEFINIZIONE SISTEMA LINEARE
-o0=theta_ott_ML(1);
-o1=theta_ott_ML(2);
-o2=theta_ott_ML(3);
-o3=theta_ott_ML(4);
-o4=theta_ott_ML(5);
-o5=theta_ott_ML(6);
+o0=theta_ott_NL(1);
+o1=theta_ott_NL(2);
+o2=theta_ott_NL(3);
+o3=theta_ott_NL(4);
+o4=theta_ott_NL(5);
+o5=theta_ott_NL(6);
+o6=theta_ott_NL(7);
+o7=theta_ott_NL(8);
+o8=theta_ott_NL(9);
+o9=theta_ott_NL(10);
 
-%CR fisiologico
+%CR fisiologico (per sistema NON lineare!) ???
 CR=o2/o3;
 
 %Forma matriciale
@@ -318,7 +322,7 @@ save('dati_intermedi.mat', 'v_xf', 'v_u', 'v_y', 'v_exit', 'v_VN', ...
 figure('Name', ['Controllo MPC - Paziente ' num2str(patient)]);
 
 %---------GLICEMIA---------
-subplot(5, 1, 1);
+subplot(5, 1, 1); 
 plot(v_y(1:Ts:end), 'r-', 'LineWidth', 1, 'DisplayName', 'Glicemia reale');
 hold on;
 plot(v_xk_obs(1,:), 'b-', 'LineWidth', 1, 'DisplayName', 'Glicemia osservatore (ODO)');
@@ -332,7 +336,7 @@ set(gca, 'FontSize', 12);
 %------------IOB------------
 IOB_obs = o4*(v_xk_obs(2,:) + v_xk_obs(3,:));
 IOB_real = o4*(v_x_real(2,:) + v_x_real(3,:));
-subplot(5, 1, 2);
+subplot(5, 1, 2); 
 yyaxis left;
 plot(IOB_vet(1:Ts:end), 'k--', 'LineWidth', 1, 'DisplayName', 'Vincolo IOB');
 hold on;
@@ -351,7 +355,7 @@ set(gca, 'FontSize', 12);
 %-----------Ra-------------
 Ra_real = o3*v_x_real(4,:);
 Ra_obs = o3*v_xk_obs(4,:);
-subplot(5, 1, 3);
+subplot(5, 1, 3); 
 yyaxis left;
 plot(Ra_real(1:Ts:end), 'r-', 'LineWidth', 1, 'DisplayName', 'Ra reale');
 hold on;
@@ -368,7 +372,7 @@ legend('show');
 set(gca, 'FontSize', 12);
 
 %-----------D1-------------
-subplot(5, 1, 4);
+subplot(5, 1, 4); 
 plot(v_d1, 'b-', 'LineWidth', 1, 'DisplayName', 'Disturbo');
 grid on;
 xlim([0, length(v_d1)]);
@@ -382,7 +386,7 @@ plot(v_VN, 'b-', 'LineWidth', 1, 'DisplayName', 'Costo');
 grid on;
 xlim([0, length(v_VN)]);
 %Etichetta asse X in comune
-xlabel('Istanti [min]');
+xlabel('Istanti [min]'); 
 ylabel('Vn');
 legend('show');
 set(gca, 'FontSize', 12);
