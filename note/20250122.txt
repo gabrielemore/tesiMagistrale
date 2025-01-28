@@ -1,0 +1,6 @@
+Migliorato parte grafici controllo lineare
+
+Creata funzione per creazione vettore pasti in modo che MPC veda un pasto per intero (quindi non solo nel primo elemento) ma solo quello (se ho due pasti ravvicinati vedrà solo il primo fino a quando l'istante k non andrà sul secondo)
+
+Inizio parte sviluppo controllo non lineare
+

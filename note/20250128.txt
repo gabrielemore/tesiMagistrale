@@ -1,0 +1,7 @@
+Implementato controllo NON lineare
+Calcolato jacobiana del sistema e relativo aggiornamento ad ogni iterazione. 
+
+Iniziato fase di debug controllo non lineare per risoluzione dei problemi:
+ - non convergenza matrici osservatore
+ - IOB reale vs Osservata molto diverse
+ - d1 non converge
