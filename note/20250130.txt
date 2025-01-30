@@ -1,0 +1,4 @@
+tentato di individuare eventuale errore in controllo non lineare
+tentativo vincolo finale xa controllo non lineare
+
+aggiunto script base per simulazione con simulatore AP

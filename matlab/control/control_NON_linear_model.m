@@ -31,7 +31,8 @@ x1max = 300;
 % IOB
 CHO_UB = 90;
 tau = 120;
-IOB_s = o4*2*Ub; %[22 - 6)
+%non è piu o4 ma o3
+IOB_s = o3*2*Ub; %[22 - 6)
 IOB_d = IOB_s + (CHO_UB/CR + tau*Ub); %[6 - 22)
 
 %uscita
@@ -142,13 +143,21 @@ opti.subject_to(ua >=umin);
 %ultimo stato xf deve essere uguale allo stato target
 opti.subject_to(xf(1:3,N+1) == xa(1:3));
 opti.subject_to(xf(6,N+1) == xa(4));
-%lo stato target deve essere tale che da li, con input ua, non mi muovo più
-opti.subject_to(xa(1) == xa(1) + Ts*(o0 - (o1 * xa(1)) - (xa(4) * xa(2)))); %con xa(4)=x6 e x4=0;
-opti.subject_to(xa(2) == xa(2) + Ts*(-(1/o3 * xa(2)) + (1/o3 * xa(3))));
-opti.subject_to(xa(3) == xa(3) + Ts*(-(1/o3 * xa(3)) + (1/o3 * ua)));
-%opti.subject_to(xa(4) == xa(4) + Ts*(-(1/o5 * xa(4)) - (o1/o6 * (xa(1)-G_basal_p(N+1))) - (1/o7 * (o3*(xa(2)+xa(3)) - IOB_basal_p)) + (1/o5 * Si_Tar_p(N+1))));
-% i parametri (Gbasal...) ad N+1 saranno diversi rispetto al tempo N.
-% Complicato rispettare il vincolo sopra
+
+
+
+% opti.subject_to(0 == (o0 - (xa(4) * xa(2)))/o1); %con xa(4)=x6 e x4=0;
+% opti.subject_to(xa(2) == ua);
+% opti.subject_to(xa(3) == ua);
+% opti.subject_to(0 == o5*((-o1/o6)*(xa(1) - G_basal_p(N)) - (1/o7)*(o3*2*ua - IOB_basal_p) + (1/o5) * Si_Tar_p(N)));
+
+% %lo stato target deve essere tale che da li, con input ua, non mi muovo più
+% opti.subject_to(xa(1) == xa(1) + Ts*(o0 - (o1 * xa(1)) - (xa(4) * xa(2)))); %con xa(4)=x6 e x4=0;
+% opti.subject_to(xa(2) == xa(2) + Ts*(-(1/o3 * xa(2)) + (1/o3 * xa(3))));
+% opti.subject_to(xa(3) == xa(3) + Ts*(-(1/o3 * xa(3)) + (1/o3 * ua)));
+% opti.subject_to(xa(4) == xa(4) + Ts*(-(1/o5 * xa(4)) - (o1/o6 * (xa(1)-G_basal_p(N+1))) - (1/o7 * (o3*(xa(2)+xa(3)) - IOB_basal_p)) + (1/o5 * Si_Tar_p(N+1))));
+% %i parametri (Gbasal...) ad N+1 saranno diversi rispetto al tempo N.
+% %Complicato rispettare il vincolo sopra
 
 %% SOLVER
 
@@ -197,7 +206,6 @@ C_d=[1 0 0 0 0 0];
 B_u_d= Ts*B_u;
 B_r_d = Ts*B_r;
 B_si_d = Ts*B_si;
-
 E_d = Ts*E;
 
 Bd=[B_u_d B_r_d E_d B_si_d];
@@ -248,8 +256,8 @@ IOB_vet = create_IOB_vector(Tmax,IOB_s,IOB_d);
 
 %simulazione pasti (1 giorno + 6h)
 rk_in = zeros(1,Tmax+(N*Ts));
-rk_in(801:830) = 60/30; %60g divisi in 30 minuti
-rk_in(1001:1020) = 30/20; %30g divisi in 20 minuti
+%rk_in(801:830) = 60/30; %60g divisi in 30 minuti
+%rk_in(1001:1020) = 30/20; %30g divisi in 20 minuti
 
 %insulina da iniettare
 u_in = 0;

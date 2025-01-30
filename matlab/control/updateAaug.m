@@ -10,4 +10,3 @@ Aaug = [A_j_d B_0 zeros(size(A_j_d,1),1);
     zeros(1,size(A_j_d,1)), 1, Ts;
     zeros(1,size(A_j_d,1)), 0, 1];
 end
-
