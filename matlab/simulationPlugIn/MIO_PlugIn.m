@@ -185,7 +185,7 @@ function [modelInputsToModObject, outSignalArray, runStopStatusToModObject] = sa
         ', min of day: ' , minOfDay,'\n'];
     end
 
-    y = sensorSigArray(2); %???sensore giusto?
+    y = sensorSigArray(1); %???sensore giusto?
     u_in=0;
 
     if mod(timeObject.minutesPastSimStart,Ts) == 0

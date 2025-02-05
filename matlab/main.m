@@ -39,8 +39,12 @@ theta_ott_ML_circ_ON = model_identification_ML(data_circadian_on_MIO,patient,o4_
 %theta_ott_NL = model_identification_NL(data_circadian_on_MESSORI,patient,div_train_test_gg_NL,theta_ott_ML,false,false);
 
 %% SALVATAGGIO PARAMETRI
-save('theta_ott_lineare.mat','theta_ott_ML');
-save('theta_ott_non_lineare.mat','theta_ott_NL');
+
+% filename_lineare = sprintf('parametri_LIN/theta_ott_lineare_p%03d.mat', patient);
+% filename_non_lineare = sprintf('parametri_NL/theta_ott_non_lineare_p%03d.mat', patient);
+% 
+% save(filename_lineare, 'theta_ott_ML');
+% save(filename_non_lineare, 'theta_ott_NL');
 
 %% CONFRONTO GRAFICO MODELLO 5 STATI CON MODELLO 6 STATI (con circadian on)
 comparison_ML_NL_circON(data_circadian_on_MIO,patient,theta_ott_ML_circ_ON,theta_ott_NL);

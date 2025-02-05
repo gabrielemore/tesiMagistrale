@@ -213,9 +213,10 @@ u0 = 0;
 IOB_vet = create_IOB_vector(Tmax,IOB_s,IOB_d);
 
 %simulazione pasti (1 giorno + 6h)
-rk_in = zeros(1,Tmax+(N*Ts));
-rk_in(801:830) = 60/30; %60g divisi in 30 minuti
-rk_in(1001:1020) = 30/20; %30g divisi in 20 minuti
+% rk_in = zeros(1,Tmax+(N*Ts));
+[rk_in,~] = create_RK_random(Tmax+(N*Ts));
+%rk_in(801:830) = 60/30; %60g divisi in 30 minuti
+%rk_in(1001:1020) = 30/20; %30g divisi in 20 minuti
 
 %insulina da iniettare
 u_in = 0;

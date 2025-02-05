@@ -1,0 +1,5 @@
+Modificato controllo non lineare aggiungendo traiettoria di equilibrio (e NON punto singolo). Persistono problemi di feasibility. Problemi a lasciare slack. CASADI sceglie di aumentare di molto slack con il risultato di avere y MPC anche minore di 0
+
+Creato funzione creazione vettore PASTI random 
+
+Calcolati e salvati i parametri lineari e non lineari di tutti i pazienti (1-10)
