@@ -1,0 +1,15 @@
+Dai un nome alla simulazione
+
+Attiva Circadian ON
+
+Aggiungi pazienti adulti diabete tipo 1
+
+In feedback control 
+Sensor - General - Commercial
+
+Control - Matlab - Percorso Desktop cartella GM - Edit Input - Accept
+
+General pumps - abbassare units a 0.0000000001
+
+Ultima scheda seleziona file generale xls per salvataggio dati
+

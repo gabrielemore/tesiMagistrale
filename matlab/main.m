@@ -68,9 +68,18 @@ control_linear_model(data_circadian_off_MIO,patient,theta_ott_ML,Ts,deltaT);
 control_NON_linear_model(data_circadian_on_MIO,patient,theta_ott_NL,Ts,deltaT);
 
 %% ANALISI SIMULAZIONI UVA/PADOVA
+root = "C:\\Users\\ITAPC\\Documents\\università\\tesi MAGISTRALE\\dati\\";
 
-data_real_sim = load("C:\Users\ITAPC\Documents\università\tesi MAGISTRALE\dati\SIM_14days_PAR_CIRC_OFF\Sim_test_14day_GM\Sim_test_14day_GM.mat");
+ML_PAR_CIRC_OFF = "SIM_14days_PAR_CIRC_OFF\\";
+ML_PAR_CIRC_ON = "SIM_14days_PAR_CIRC_ON\\";
+%NL_PAR_CIRC_ON = "SIM_14days_NL\\";
 
+%% modello lineare con paramentri stimati da modello con CIRCADIAN OFF
 for i=1:10
-    print_result(data_real_sim,i,Ts);
+    print_result(root,ML_PAR_CIRC_OFF,i,Ts);
+end
+
+%% modello lineare con paramentri stimati da modello con CIRCADIAN ON
+for i=1:10
+    print_result(root,ML_PAR_CIRC_ON,i,Ts);
 end

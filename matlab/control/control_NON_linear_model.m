@@ -49,6 +49,7 @@ p_iper_x1 =1*10^9;
 p_IOB = 1*10^9;
 
 p_XN = eye(4)*1*10^9;
+p_SIM=1*10^9;
 
 %% VARIABILI e PARAMETRI OTTIMIZZAZIONE
 opti = casadi.Opti();
@@ -72,6 +73,7 @@ delta_iper = opti.variable(T);
 delta_IOB_eq = opti.variable(T);
 
 delta_XN = opti.variable(4,1);
+delta_simm = opti.variable();
 
 %vincolo dinamico IOB(t)
 IOB_bound = opti.parameter(N);
@@ -118,7 +120,9 @@ end
 
 V_XN = delta_XN(1:4)'*p_XN*delta_XN(1:4);
 
-V = V + V_XN;
+V_SIM = delta_simm^2*p_SIM;
+
+V = V + V_XN + V_SIM;
 
 opti.minimize(V);
 
@@ -159,7 +163,11 @@ end
 opti.subject_to(xf(1:3,N+1) == xa(1:3,N+1));
 opti.subject_to(xf(6,N+1) == xa(4,N+1));
 %stato iniziale e terminale traiettoria eq devono coincidere
-% opti.subject_to(xa(:,1) == xa(:,T+1));
+opti.subject_to(xa(:,1) == xa(:,T+1));
+
+% opti.subject_to(xa(1:3,1) == xk(1:3));
+% opti.subject_to(xa(4,1) == xk(6));
+% opti.subject_to(abs(xa(:,1) - xa(:,T+1))<= delta_simm);
 
 %traiettoria di eq
 for j=1:T

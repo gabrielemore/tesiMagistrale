@@ -1,10 +1,19 @@
-function print_result(data_real,patient,Ts)
+function print_result(root,data,patient,Ts)
+
+%% COSTRUZIONE PERCORSO
+data_root = root + data;
+
+data_real_dir = data_root + "Sim_test_14day_GM\\Sim_test_14day_GM.mat";
+data_patients = data_root + "SIM_PAZIENTI\\";
 
 %% ESTRAZIONE DATI REALI
+
+data_real= load(data_real_dir);
+
 [time,Gb,CR,CF,Ub,u,r,y,IOB,Ra] = data_extraction(data_real,patient);
 
 file_id = sprintf('adult#%03d_dati_simulazione_T20161.mat', patient);
-file_name = sprintf('C:\\Users\\ITAPC\\Documents\\università\\tesi MAGISTRALE\\dati\\SIM_14days_PAR_CIRC_OFF\\SIM_LIN_PAR_CIRC_OFF\\%s', file_id);
+file_name = data_patients + file_id;
 
 load(file_name);
 
