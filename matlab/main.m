@@ -30,7 +30,7 @@ disp('MODELLO 5 STATI - DATASET CIRCADIAN OFF')
 theta_ott_ML = model_identification_ML(data_circadian_off_MIO,patient,o4_vet(patient),div_train_test_gg_ML,false,false);
 disp('MODELLO 6 STATI - DATASET CIRCADIAN ON')
 theta_ott_NL = model_identification_NL(data_circadian_on_MIO,patient,div_train_test_gg_NL,theta_ott_ML,false,false);
-%identificazione modello a 5 stati su dati con circadian ON
+% identificazione modello a 5 stati su dati con circadian ON
 disp('MODELLO 5 STATI - DATASET CIRCADIAN ON')
 theta_ott_ML_circ_ON = model_identification_ML(data_circadian_on_MIO,patient,o4_vet(patient),div_train_test_gg_ML,false,false);
 
@@ -40,10 +40,10 @@ theta_ott_ML_circ_ON = model_identification_ML(data_circadian_on_MIO,patient,o4_
 
 %% SALVATAGGIO PARAMETRI
 
-% filename_lineare = sprintf('parametri_LIN/theta_ott_lineare_p%03d.mat', patient);
+% filename_lineare = sprintf('parametri_LIN_CIRC_ON/theta_ott_lineare_circ_on_p%03d.mat', patient);
 % filename_non_lineare = sprintf('parametri_NL/theta_ott_non_lineare_p%03d.mat', patient);
 % 
-% save(filename_lineare, 'theta_ott_ML');
+% save(filename_lineare, 'theta_ott_ML_circ_ON');
 % save(filename_non_lineare, 'theta_ott_NL');
 
 %% CONFRONTO GRAFICO MODELLO 5 STATI CON MODELLO 6 STATI (con circadian on)
@@ -66,3 +66,11 @@ control_linear_model(data_circadian_off_MIO,patient,theta_ott_ML,Ts,deltaT);
 
 %% CONTROLLO MODELLO NON LINEARE
 control_NON_linear_model(data_circadian_on_MIO,patient,theta_ott_NL,Ts,deltaT);
+
+%% ANALISI SIMULAZIONI UVA/PADOVA
+
+data_real_sim = load("C:\Users\ITAPC\Documents\università\tesi MAGISTRALE\dati\SIM_14days_PAR_CIRC_OFF\Sim_test_14day_GM\Sim_test_14day_GM.mat");
+
+for i=1:10
+    print_result(data_real_sim,i,Ts);
+end

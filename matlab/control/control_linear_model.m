@@ -157,7 +157,7 @@ opti.solver('ipopt', plgopt, s_opts);
 
 %funzione MPC
 %opti.to_function(name, inputs, outputs, input_names, output_names)
-MPC=opti.to_function('MPC',{xk,rk,IOB_bound},{uf,xf,V,delta_ipo,delta_iper},{'xk','rk','IOB_bound'},{'uf_opt','xf_opt','V_opt','delta_ipo','delta_iper'});
+MPC=opti.to_function('MPC',{xk,rk,IOB_bound},{uf,xf,V,delta_ipo,delta_iper,delta_ipo_x1,delta_iper_x1,delta_IOB,xa,ua},{'xk','rk','IOB_bound'},{'uf_opt','xf_opt','V_opt','delta_ipo','delta_iper','delta_ipo_x1','delta_iper_x1','delta_IOB','xa','ua'});
 
 %% OSSERVATORE
 %KF settings
@@ -187,6 +187,9 @@ R_kf = sigma_q_cgm;
 %% SIMULZIONE
 %vettori per salvataggio dati intermedi
 v_xf =[];
+v_xa =[];
+v_uf =[];
+v_ua =[];
 v_u=[];
 v_y=[];
 v_exit=[];
@@ -199,8 +202,12 @@ v_d1 = [];
 v_d2 =[];
 v_delta_ipo = [];
 v_delta_iper = [];
+v_delta_iper_x1 =  [];
+v_delta_ipo_x1 =  [];
+v_delta_IOB =[];
 v_xk_obs =[];
 v_x_real =[];
+v_time_sol =[];
 
 %tempo di simulazione in minuti
 Tmax = 24*60*1;
@@ -243,12 +250,23 @@ for k=1:Tmax
 
         %MPC
         %risolvo il problema di minimizzazione al passo k
-        [uf_sol,xf_sol,V_sol,d_ipo,d_iper]=MPC(xk_sim,rk_sim,IOB_vet(k:Ts:k+N*Ts));
+        [uf_sol,xf_sol,V_sol,d_ipo,d_iper,d_ipo_x1,d_iper_x1,d_IOB,xa_sol,ua_sol]=MPC(xk_sim,rk_sim,IOB_vet(k:Ts:k+N*Ts));
         %verifico exit MPC
         exit=get_stats(MPC);
+
+        %converto risultato simbolico in risultato numerico
+        xf_sim=full(xf_sol);
+        uf_sim=full(uf_sol);
+        xa_sim=full(xa_sol);
+        ua_sim=full(ua_sol);
+        Vn=full(V_sol);
+        delta_iper_sim = full(d_iper);
+        delta_ipo_sim = full(d_ipo);
+        delta_iper_x1_sim = full(d_iper_x1);
+        delta_ipo_x1_sim = full(d_ipo_x1);
+        delta_IOB_sim = full(d_IOB);
+
         if exit.success==1
-            %converto risultato simbolico in risultato numerico
-            uf_sim=full(uf_sol);
             % prendo solo il primo elemento di uf ottima e lo applico al sistema
             u_in=uf_sim(1);
         else
@@ -257,14 +275,15 @@ for k=1:Tmax
             u_in=u_aug(1);
         end
 
-        %converto risultato simbolico in risultato numerico
-        xf_sim=full(xf_sol);
-        Vn=full(V_sol);
-        delta_iper_sim = full(d_iper);
-        delta_ipo_sim = full(d_ipo);
 
         %matrice stati x controllati con MPC su N=72 (6 ore)
         v_xf = [v_xf;xf_sim];
+        %matrice controllo u
+        v_uf = [v_uf;uf_sim];
+        %matrice stati artificiali
+        v_xa = [v_xa;xa_sim];
+        %matrice controllo artificiale
+        v_ua = [v_ua;ua_sim];
         %matrice valore del costo
         v_VN = [v_VN; Vn];
         %matrice soluzione MPC trovata
@@ -278,8 +297,13 @@ for k=1:Tmax
         %salvo valori delta calcolati in funzione MPC
         v_delta_iper = [v_delta_iper;delta_iper_sim];
         v_delta_ipo = [v_delta_ipo;delta_ipo_sim];
+        v_delta_iper_x1 = [v_delta_iper_x1;delta_iper_x1_sim];
+        v_delta_ipo_x1 = [v_delta_ipo_x1;delta_ipo_x1_sim];
+        v_delta_IOB = [v_delta_IOB;delta_IOB_sim];
         %salvo valori xk osservati dall'osservatore
         v_xk_obs = [v_xk_obs xk_obs];
+        %salvo tempi risoluzione MPC di ogni iterazione
+        v_time_sol = [v_time_sol;exit.t_wall_total];
 
         %aggiorno valori aug per prossima iterazione MPC
         x_aug = xk_obs;

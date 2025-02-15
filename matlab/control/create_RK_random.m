@@ -6,6 +6,9 @@ MIN_MEAL = 40;
 MAX_SNACK= 20;
 MIN_SNACK = 10;
 
+%chiave per ripetibilità
+rng(12345);
+
 rk=zeros(1,Tmax);
 rk_full=zeros(1,Tmax);
 
@@ -13,8 +16,8 @@ rk_full=zeros(1,Tmax);
 day = floor(Tmax/1440);
 
 for j=1:day
-    %COLAZIONE 6-10h (360-600m) (la faccio il 90% delle volte)
-    if rand < 0.9
+    %COLAZIONE 6-10h (360-600m)
+    if rand < 1
         %inizio un pasto ad un multiplo di 5 (+1 per struttura codice controllo)
         ini=randi([360, 600] / 5) * 5 + 1;
         %durata dle pasto tra 10 e 30 minuti
@@ -28,7 +31,7 @@ for j=1:day
         rk_full(ini + (j-1)*1440) = carbo;
     end
     %PRANZO 11.30-14h
-    if rand < 0.9
+    if rand < 1
         %inizio un pasto ad un multiplo di 5 (+1 per struttura codice controllo)
         ini=randi([720, 840] / 5) * 5 + 1;
         %durata dle pasto tra 10 e 50 minuti
@@ -41,10 +44,10 @@ for j=1:day
         rk(ini + (j-1)*1440 : fine + (j-1)*1440) = carbo/duration;
         rk_full(ini + (j-1)*1440) = carbo;
     end
-    %CENA 19-21h
-    if rand < 0.9
+    %CENA 19-20h
+    if rand < 1
         %inizio un pasto ad un multiplo di 5 (+1 per struttura codice controllo)
-        ini=randi([1140, 1260] / 5) * 5 + 1;
+        ini=randi([1140, 1200] / 5) * 5 + 1;
         %durata dle pasto tra 10 e 50 minuti
         duration = randi([10, 50] / 5) * 5;
         fine = ini + duration -1;
