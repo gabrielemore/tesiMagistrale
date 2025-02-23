@@ -286,7 +286,7 @@ v_x_real =[];
 v_time_sol =[];
 
 %tempo di simulazione in minuti
-Tmax = 24*60*1;
+Tmax = 3*60*1;
 
 %ipotesi iniziali
 x0 = [Gb Ub Ub 0 0 CF]';
@@ -296,10 +296,10 @@ u0 = 0;
 IOB_vet = create_IOB_vector_NL(Tmax+(T*Ts),IOB_s,IOB_d);
 
 %simulazione pasti (1 giorno + 6h)
-% rk_in = zeros(1,Tmax+(N*Ts));
-[rk_in,~] = create_RK_random(Tmax+(N*Ts));
+rk_in = zeros(1,Tmax+(N*Ts));
+%[rk_in,~] = create_RK_random(Tmax+(N*Ts));
 % rk_in(481:510) = 60/30; %60g divisi in 30 minuti
-% rk_in(111:140) = 60/30; %60g divisi in 30 minuti
+ rk_in(111:140) = 60/30; %60g divisi in 30 minuti
 % rk_in(121:150) = 60/30; %60g divisi in 30 minuti
 
 %insulina da iniettare

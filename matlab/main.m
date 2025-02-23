@@ -61,6 +61,15 @@ validation_messori_circ_on(data_circadian_on_MESSORI_val,patient,theta_ott_NL,fa
 Ts = 5;
 deltaT = 1;
 
+%caricamento parametri lineari
+file_id = sprintf('theta_ott_lineare_p%03d.mat', patient);
+file_name = "parametri stimati\\parametri_LIN\\" + file_id;
+load(file_name);
+%caricamento parametri non lineari
+file_id = sprintf('theta_ott_non_lineare_p%03d.mat', patient);
+file_name = "parametri stimati\\parametri_NL\\" + file_id;
+load(file_name);
+
 %% CONTROLLO MODELLO LINEARE
 control_linear_model(data_circadian_off_MIO,patient,theta_ott_ML,Ts,deltaT);
 
@@ -68,18 +77,23 @@ control_linear_model(data_circadian_off_MIO,patient,theta_ott_ML,Ts,deltaT);
 control_NON_linear_model(data_circadian_on_MIO,patient,theta_ott_NL,Ts,deltaT);
 
 %% ANALISI SIMULAZIONI UVA/PADOVA
-root = "C:\\Users\\ITAPC\\Documents\\università\\tesi MAGISTRALE\\dati\\";
+root_dati_sim = "C:\\Users\\ITAPC\\Documents\\università\\tesi MAGISTRALE\\dati\\";
 
 ML_PAR_CIRC_OFF = "SIM_14days_PAR_CIRC_OFF\\";
 ML_PAR_CIRC_ON = "SIM_14days_PAR_CIRC_ON\\";
-%NL_PAR_CIRC_ON = "SIM_14days_NL\\";
+NL_PAR_CIRC_ON = "SIM_14days_NL_3\\";
 
 %% modello lineare con paramentri stimati da modello con CIRCADIAN OFF
 for i=1:10
-    print_result(root,ML_PAR_CIRC_OFF,i,Ts);
+    print_result(root_dati_sim,ML_PAR_CIRC_OFF,i,Ts);
 end
 
 %% modello lineare con paramentri stimati da modello con CIRCADIAN ON
 for i=1:10
-    print_result(root,ML_PAR_CIRC_ON,i,Ts);
+    print_result(root_dati_sim,ML_PAR_CIRC_ON,i,Ts);
+end
+
+%% modello non lineare
+for i=1:1
+    print_result_NL(root_dati_sim,NL_PAR_CIRC_ON,i,Ts);
 end

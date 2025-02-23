@@ -1,0 +1,1 @@
+Test con vincolo periodicita off
