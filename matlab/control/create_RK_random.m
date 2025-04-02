@@ -16,10 +16,10 @@ rk_full=zeros(1,Tmax);
 day = floor(Tmax/1440);
 
 for j=1:day
-    %COLAZIONE 6-10h (360-600m)
+    %COLAZIONE 6-9.30 (360-600m)
     if rand < 1
         %inizio un pasto ad un multiplo di 5 (+1 per struttura codice controllo)
-        ini=randi([360, 600] / 5) * 5 + 1;
+        ini=randi([360, 570] / 5) * 5 + 1;
         %durata dle pasto tra 10 e 30 minuti
         duration = randi([10, 30] / 5) * 5;
         fine = ini + duration -1;
@@ -44,10 +44,10 @@ for j=1:day
         rk(ini + (j-1)*1440 : fine + (j-1)*1440) = carbo/duration;
         rk_full(ini + (j-1)*1440) = carbo;
     end
-    %CENA 19-20h
+    %CENA 18-19h
     if rand < 1
         %inizio un pasto ad un multiplo di 5 (+1 per struttura codice controllo)
-        ini=randi([1140, 1200] / 5) * 5 + 1;
+        ini=randi([1080, 1140] / 5) * 5 + 1;
         %durata dle pasto tra 10 e 50 minuti
         duration = randi([10, 50] / 5) * 5;
         fine = ini + duration -1;
@@ -72,10 +72,10 @@ for j=1:day
         rk(ini + (j-1)*1440 : fine + (j-1)*1440) = carbo/duration;
         rk_full(ini + (j-1)*1440) = carbo;
     end
-    %SNACK POMERIDIANO 16-18
+    %SNACK POMERIDIANO 15.30-16.30
     if rand < 0.4
         %inizio un pasto ad un multiplo di 5 (+1 per struttura codice controllo)
-        ini=randi([960, 1080] / 5) * 5 + 1;
+        ini=randi([930, 990] / 5) * 5 + 1;
         %durata dle pasto tra 10 e 20 minuti
         duration = randi([10, 20] / 5) * 5;
         fine = ini + duration -1;

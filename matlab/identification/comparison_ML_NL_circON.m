@@ -85,6 +85,9 @@ for k=1:time
 
 end
 
+% salvataggio grafici
+output_folder = 'C:\Users\ITAPC\Documents\università\tesi MAGISTRALE\matlab\export_figures\identification';
+
 %% CONFRONTO GRAFICO
 %-------------CGM--------------
 figure('Name', ['Confronto ML vs NL lineare - Paziente ' num2str(patient)]);
@@ -104,7 +107,11 @@ ylabel('Glucosio [mg/dL]');
 title(['Confronto CGM: ML vs NL - Paziente ' num2str(patient)]);
 legend('show');
 set(gca, 'FontSize', 12);
-set(gcf, 'Color', 'white');
+set(gcf, 'Color', 'white','Position', [100, 100, 1200, 800]);
+
+% %export fig
+% filename = fullfile(output_folder, ['Comparsion_ML_NL_GA_Patient_' num2str(patient) '.pdf']);
+% export_fig(filename, '-pdf');
 
 %------------IOB------------
 %calcolo IOB_cap
@@ -127,7 +134,11 @@ ylabel('IOB [U]');
 title(['Confronto IOB: ML vs NL - Paziente ' num2str(patient)]);
 legend('show');
 set(gca, 'FontSize', 12);
-set(gcf, 'Color', 'white');
+set(gcf, 'Color', 'white','Position', [100, 100, 1200, 800]);
+
+% %export fig
+% filename = fullfile(output_folder, ['Comparsion_ML_NL_IOB_Patient_' num2str(patient) '.pdf']);
+% export_fig(filename, '-pdf');
 
 %-----------Ra-------------
 %calcolo Ra_cap
@@ -149,7 +160,11 @@ ylabel('Ra [mg/(dl\cdotmin)]');
 title(['Confronto Ra: ML vs NL - Paziente ' num2str(patient)]);
 legend('show');
 set(gca, 'FontSize', 12);
-set(gcf, 'Color', 'white');
+set(gcf, 'Color', 'white','Position', [100, 100, 1200, 800]);
+
+%export fig
+% filename = fullfile(output_folder, ['Comparsion_ML_NL_3x1_Patient_' num2str(patient) '.pdf']);
+% export_fig(filename, '-pdf');
 
 end
 

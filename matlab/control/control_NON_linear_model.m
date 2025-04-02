@@ -48,8 +48,8 @@ p_ipo_x1 =1*10^9;
 p_iper_x1 =1*10^9;
 p_IOB = 1*10^9;
 
-p_XN = eye(4)*1*10^9;
-p_SIM=1*10^9;
+p_XN = eye(4)*1*10^5;
+p_SIM= eye(4)*1*10^5;
 
 %% VARIABILI e PARAMETRI OTTIMIZZAZIONE
 opti = casadi.Opti();
@@ -63,20 +63,20 @@ xa = opti.variable(4,T+1);
 ua = opti.variable(1,T);
 
 %costo addizionale variabili slack
-delta_iper_x1 = opti.variable(N);
-delta_ipo_x1 = opti.variable(N);
-delta_IOB = opti.variable(N);
+delta_iper_x1 = opti.variable(N+1);
+delta_ipo_x1 = opti.variable(N+1);
+delta_IOB = opti.variable(N+1);
 
 %costo addizionale
-delta_ipo = opti.variable(T);
-delta_iper = opti.variable(T);
-delta_IOB_eq = opti.variable(T);
+delta_ipo = opti.variable(T+1);
+delta_iper = opti.variable(T+1);
+delta_IOB_eq = opti.variable(T+1);
 
 delta_XN = opti.variable(4,1);
-delta_simm = opti.variable();
+delta_simm = opti.variable(4,1);
 
 %vincolo dinamico IOB(t)
-IOB_bound = opti.parameter(N);
+IOB_bound = opti.parameter(N+1);
 xk = opti.parameter(6,1); % x0 stimato da osservatore
 rk = opti.parameter(N);
 
@@ -87,13 +87,16 @@ G_basal_p = opti.parameter(N);
 IOB_basal_p = opti.parameter();
 %parametri per traiettoria equilibrio
 Si_Tar_eq = opti.parameter(T);
-G_basal_eq = opti.parameter(T);
-IOB_bound_eq = opti.parameter(T);
+G_basal_eq = opti.parameter(T+1);
+IOB_bound_eq = opti.parameter(T+1);
 
 %% FUNZIONE DI COSTO
+% Q=10^3;
+% R=10^2;
+% S=10^6;
 Q=1;
-R=100;
-S=10^3;
+R=10^2;
+S=10^2;
 
 V=0;
 for j=1:N
@@ -107,9 +110,12 @@ for j=1:N
     V = V + V_dyn + V_IOB + V_x1;
 end
 
+%costo elementi N+1
+V= V + (xf(1,N+1) - xa(1,N+1))'*Q*(xf(1,N+1)- xa(1,N+1)) + p_IOB*delta_IOB(N+1)^2 + p_iper_x1*delta_iper_x1(N+1)^2 + p_ipo_x1*delta_ipo_x1(N+1)^2;
+
 %costo traiettoria di equilibrio
 for j=1:T
-    V_traj = (xa(1,j) - G_basal_eq(j))'*S*(xa(1,j) - G_basal_eq(j));
+    V_traj = (xa(1,j) - G_basal_eq(j))'*S*(xa(1,j) -  G_basal_eq(j));
     %costo addizionale
     V_s = p_iper*delta_iper(j)^2 + p_ipo*delta_ipo(j)^2;
     %costo slack IOB
@@ -118,9 +124,12 @@ for j=1:T
     V = V + V_s + V_IOB_eq + V_traj;
 end
 
+%costo elemento T+1
+V=V + (xa(1,T+1) - G_basal_eq(T+1))'*S*(xa(1,T+1) - G_basal_eq(T+1)) + p_iper*delta_iper(T+1)^2 + p_ipo*delta_ipo(T+1)^2 + p_IOB*delta_IOB_eq(T+1)^2;
+
 V_XN = delta_XN(1:4)'*p_XN*delta_XN(1:4);
 
-V_SIM = delta_simm^2*p_SIM;
+V_SIM = delta_simm(1:4)'*p_SIM*delta_simm(1:4);
 
 V = V + V_XN + V_SIM;
 
@@ -128,6 +137,10 @@ opti.minimize(V);
 
 %warm start ua
 opti.set_initial(ua, Ub * ones(1, T));
+opti.set_initial(xa(1,:), 120 * ones(1, T+1));
+opti.set_initial(xa(2,:), Ub * ones(1, T+1));
+opti.set_initial(xa(3,:), Ub * ones(1, T+1));
+opti.set_initial(xa(4,:), CF * ones(1, T+1));
 
 %% VINCOLI
 
@@ -155,19 +168,42 @@ for j=1:N
     opti.subject_to(delta_ipo_x1(j) >=0);
     opti.subject_to(delta_iper_x1(j) >=0);
     opti.subject_to(delta_IOB(j) >=0);
+
+    opti.subject_to(xf(:,j) >=0);
 end
 
-%intersezione traiettoria sistema e traiettoria equilibrio
-% opti.subject_to( abs(xf(1:3,N+1) - xa(1:3,N+1)) <= delta_XN(1:3));
-% opti.subject_to( abs(xf(6,N+1) - xa(4,N+1)) <= delta_XN(4));
-opti.subject_to(xf(1:3,N+1) == xa(1:3,N+1));
-opti.subject_to(xf(6,N+1) == xa(4,N+1));
-%stato iniziale e terminale traiettoria eq devono coincidere
-opti.subject_to(xa(:,1) == xa(:,T+1));
+%x1 +- slack
+opti.subject_to(xf(1,N+1) >=x1min - delta_ipo_x1(N+1));
+opti.subject_to(xf(1,N+1) <=x1max + delta_iper_x1(N+1));
+%x2 e x3 +- slack
+opti.subject_to(o3*(xf(2,N+1)+xf(3,N+1)) <=IOB_bound(N+1) + delta_IOB(N+1));
+%slack x1 e IOB >=0
+opti.subject_to(delta_ipo_x1(N+1) >=0);
+opti.subject_to(delta_iper_x1(N+1) >=0);
+opti.subject_to(delta_IOB(N+1) >=0);
+opti.subject_to(xf(:,N+1) >=0);
 
-% opti.subject_to(xa(1:3,1) == xk(1:3));
-% opti.subject_to(xa(4,1) == xk(6));
-% opti.subject_to(abs(xa(:,1) - xa(:,T+1))<= delta_simm);
+
+%intersezione traiettoria sistema e traiettoria equilibrio
+opti.subject_to((xf(1:3,N+1) - xa(1:3,N+1)) <= delta_XN(1:3));
+opti.subject_to(-(xf(1:3,N+1) - xa(1:3,N+1)) <= delta_XN(1:3));
+
+opti.subject_to((xf(6,N+1) - xa(4,N+1)) <= delta_XN(4));
+opti.subject_to( -(xf(6,N+1) - xa(4,N+1)) <= delta_XN(4));
+
+opti.subject_to(delta_XN(:)>=0);
+
+% opti.subject_to(xf(1:3,N+1) == xa(1:3,N+1));
+% opti.subject_to(xf(6,N+1) == xa(4,N+1));
+
+
+
+%stato iniziale e terminale traiettoria eq devono coincidere
+% opti.subject_to(xa(:,1) == xa(:,T+1));
+opti.subject_to((xa(:,1) - xa(:,T+1)) <=  delta_simm(:));
+opti.subject_to( -(xa(:,1) - xa(:,T+1)) <=  delta_simm(:));
+
+opti.subject_to(delta_simm(:)>=0);
 
 %traiettoria di eq
 for j=1:T
@@ -176,7 +212,7 @@ for j=1:T
     opti.subject_to(xa(2,j+1) == xa(2,j) + Ts*(-(1/o3 * xa(2,j)) + (1/o3 * xa(3,j)))); % Qi
     opti.subject_to(xa(3,j+1) == xa(3,j) + Ts*(-(1/o3 * xa(3,j)) + (1/o3 * ua(j)))); % Qisub
     opti.subject_to(xa(4,j+1) == xa(4,j) + Ts*(-(1/o5 * xa(4,j)) - (o1/o6 * (xa(1,j) - (o0 - xa(4,j)*ua(j))/o1)) - (1/o7 * (o3*(xa(2,j) + xa(3,j)) - 2*o3*ua(j))) + (1/o5 * Si_Tar_eq(j)))); % Si
-
+   
     %x1a = ya
     opti.subject_to(xa(1,j) >=ymin - delta_ipo(j));
     opti.subject_to(xa(1,j) <=ymax + delta_iper(j));
@@ -189,7 +225,19 @@ for j=1:T
     opti.subject_to(delta_ipo(j) >=0);
     opti.subject_to(delta_iper(j) >=0);
     opti.subject_to(delta_IOB_eq(j) >=0);
+
+    opti.subject_to(xa(:,j) >=0);
 end
+
+opti.subject_to(xa(1,T+1) >=ymin - delta_ipo(T+1));
+opti.subject_to(xa(1,T+1) <=ymax + delta_iper(T+1));
+%x2 e x3
+opti.subject_to(o3*(xa(2,T+1) + xa(3,T+1)) <= IOB_bound_eq(T+1) + delta_IOB_eq(T+1));
+%delta ipo e iper >=0
+opti.subject_to(delta_ipo(T+1) >=0);
+opti.subject_to(delta_iper(T+1) >=0);
+opti.subject_to(delta_IOB_eq(T+1) >=0);
+opti.subject_to(xa(:,T+1) >=0);
 
 %% SOLVER
 
@@ -206,7 +254,7 @@ opti.solver('ipopt', plgopt, s_opts);
 
 %funzione MPC
 %opti.to_function(name, inputs, outputs, input_names, output_names)
-MPC=opti.to_function('MPC',{xk,rk,IOB_bound,Si_Tar_p,G_basal_p,IOB_basal_p,Si_Tar_eq,G_basal_eq,IOB_bound_eq},{uf,xf,V,xa,ua,delta_ipo,delta_iper,delta_ipo_x1,delta_iper_x1,delta_IOB,delta_IOB_eq,delta_XN},{'xk','rk','IOB_bound','Si_Tar_p','G_basal_p','IOB_basal_p','Si_Tar_eq','G_basal_eq','IOB_bound_eq'},{'uf_opt','xf_opt','V_opt','xa','ua','delta_ipo','delta_iper','delta_ipo_x1','delta_iper_x1','delta_IOB','delta_IOB_eq','delta_XN'});
+MPC=opti.to_function('MPC',{xk,rk,IOB_bound,Si_Tar_p,G_basal_p,IOB_basal_p,Si_Tar_eq,G_basal_eq,IOB_bound_eq},{uf,xf,V,xa,ua,delta_ipo,delta_iper,delta_ipo_x1,delta_iper_x1,delta_IOB,delta_IOB_eq},{'xk','rk','IOB_bound','Si_Tar_p','G_basal_p','IOB_basal_p','Si_Tar_eq','G_basal_eq','IOB_bound_eq'},{'uf_opt','xf_opt','V_opt','xa','ua','delta_ipo','delta_iper','delta_ipo_x1','delta_iper_x1','delta_IOB','delta_IOB_eq'});
 
 %% OSSERVATORE
 %KF settings
@@ -280,13 +328,13 @@ v_delta_iper_x1 = [];
 v_delta_ipo_x1 = [];
 v_delta_IOB =[];
 v_delta_IOB_eq =[];
-v_delta_XN =[];
+%v_delta_XN =[];
 v_xk_obs =[];
 v_x_real =[];
 v_time_sol =[];
 
 %tempo di simulazione in minuti
-Tmax = 3*60*1;
+Tmax = 24*60*1;
 
 %ipotesi iniziali
 x0 = [Gb Ub Ub 0 0 CF]';
@@ -296,11 +344,7 @@ u0 = 0;
 IOB_vet = create_IOB_vector_NL(Tmax+(T*Ts),IOB_s,IOB_d);
 
 %simulazione pasti (1 giorno + 6h)
-rk_in = zeros(1,Tmax+(N*Ts));
-%[rk_in,~] = create_RK_random(Tmax+(N*Ts));
-% rk_in(481:510) = 60/30; %60g divisi in 30 minuti
- rk_in(111:140) = 60/30; %60g divisi in 30 minuti
-% rk_in(121:150) = 60/30; %60g divisi in 30 minuti
+[rk_in,~] = create_RK_random(Tmax+(N*Ts));
 
 %insulina da iniettare
 u_in = 0;
@@ -310,6 +354,7 @@ tspan = [0 1];
 %Inizializzazioni parte NON lineare
 Si_tar = CF*(1+0.01*o8*sin((2*pi*(1:(Tmax+T*Ts))*deltaT)/(60*24) + 2*pi*0.01*o9));
 G_basal = (o0-Si_tar*Ub)/o1;
+% G_basal = 120*ones(size(Si_tar));
 IOB_basal=2*Ub*o3;
 
 %inizializzazioni osservatore
@@ -332,7 +377,7 @@ for k=1:Tmax
 
         %MPC
         %risolvo il problema di minimizzazione al passo k
-        [uf_sol,xf_sol,V_sol,xa_sol,ua_sol,d_ipo,d_iper,d_ipo_x1,d_iper_x1,d_IOB,d_IOB_eq,d_XN]=MPC(xk_sim,rk_sim,IOB_vet(k:Ts:k+N*Ts-1),Si_tar(k:Ts:k+N*Ts-1),G_basal(k:Ts:k+N*Ts-1),IOB_basal,Si_tar(k:Ts:k+T*Ts-1),G_basal(k:Ts:k+T*Ts-1),IOB_vet(k:Ts:k+T*Ts-1));
+        [uf_sol,xf_sol,V_sol,xa_sol,ua_sol,d_ipo,d_iper,d_ipo_x1,d_iper_x1,d_IOB,d_IOB_eq]=MPC(xk_sim,rk_sim,IOB_vet(k:Ts:k+N*Ts),Si_tar(k:Ts:k+N*Ts-1),G_basal(k:Ts:k+N*Ts-1),IOB_basal,Si_tar(k:Ts:k+T*Ts-1),G_basal(k:Ts:k+T*Ts),IOB_vet(k:Ts:k+T*Ts));
         % [uf_sol,xf_sol,V_sol,d_ipo,d_iper,xa_sol]=MPC(xk_sim,rk_sim,IOB_vet(k:Ts:k+N*Ts-1),Si_tar(k:Ts:k+N*Ts-1),G_basal(k:Ts:k+N*Ts-1),IOB_basal,G_basal(k:Ts:k+T*Ts-1),Si_tar(k:Ts:k+T*Ts-1),IOB_vet(k:Ts:k+T*Ts-1));
 
         %converto risultato simbolico in risultato numerico
@@ -347,57 +392,13 @@ for k=1:Tmax
         delta_ipo_x1_sim = full(d_ipo_x1);
         delta_IOB_sim = full(d_IOB);
         delta_IOB_eq_sim = full(d_IOB_eq);
-        delta_XN_sim = full(d_XN);
+        % delta_XN_sim = full(d_XN);
         %verifico exit MPC
         exit=get_stats(MPC);
         if exit.success==1
             % prendo solo il primo elemento di uf ottima e lo applico al sistema
             u_in=uf_sim(1);
         else
-            %stampo grafico soluzione precedente
-            %TEST
-            figure('Name', ['Soluzione precedente X']);
-            plot(v_xa(end-3,:),'DisplayName', 'xa');
-            hold on;
-            legend('show');
-            plot(v_xf(end-5,:),'DisplayName', 'xf');
-            plot(G_basal(k:Ts:k+T*Ts-1),'DisplayName', 'Gb(t)');
-
-            figure('Name', ['Soluzione precedente IOB']);
-            plot(o3*(v_xa(end-2,:) + v_xa(end-1,:)) ,'DisplayName', 'xa');
-            hold on;
-            legend('show');
-            plot(o3*(v_xf(end-4,:) + v_xf(end-3,:)),'DisplayName', 'xf');
-            plot(IOB_vet(k:Ts:k+T*Ts-1),'DisplayName', 'IOB(t)');
-
-            figure('Name', ['Soluzione precedente U']);
-            stem(v_ua(end,:),'Marker','none','DisplayName', 'ua');
-            hold on;
-            legend('show');
-            stem(v_uf(end,:),'Marker','none','DisplayName', 'uf');
-
-            %stampo grafico soluzione ATTUALE NON FATTIBILE
-            %TEST
-            figure('Name', ['Soluzione attuale NON fattibile X']);
-            plot(xa_sim(1,:),'DisplayName', 'xa');
-            hold on;
-            legend('show');
-            plot(xf_sim(1,:),'DisplayName', 'xf');
-            plot(G_basal(k:Ts:k+T*Ts-1),'DisplayName', 'Gb(t)');
-
-            figure('Name', ['Soluzione attuale NON fattibile IOB']);
-            plot(o3*(xa_sim(2,:) + xa_sim(3,:)) ,'DisplayName', 'xa');
-            hold on;
-            legend('show');
-            plot(o3*(xf_sim(2,:) + xf_sim(3,:)),'DisplayName', 'xf');
-            plot(IOB_vet(k:Ts:k+T*Ts-1),'DisplayName', 'IOB(t)');
-
-            figure('Name', ['Soluzione attuale NON fattibile U']);
-            stem(ua_sim(:),'Marker','none','DisplayName', 'ua');
-            hold on;
-            legend('show');
-            stem(uf_sim(:),'Marker','none','DisplayName', 'uf');
-
             %se non trovo una soluzione ottima ingresso 0
             u_in=0;
         end
@@ -427,7 +428,7 @@ for k=1:Tmax
         v_delta_ipo_x1 = [v_delta_ipo_x1;delta_ipo_x1_sim];
         v_delta_IOB = [v_delta_IOB;delta_IOB_sim];
         v_delta_IOB_eq = [v_delta_IOB_eq;delta_IOB_eq_sim];
-        v_delta_XN = [v_delta_XN;delta_XN_sim];
+        % v_delta_XN = [v_delta_XN;delta_XN_sim];
         %salvo valori xk osservati dall'osservatore
         v_xk_obs = [v_xk_obs xk_obs];
         %salvo tempi risoluzione MPC di ogni iterazione

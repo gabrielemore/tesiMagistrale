@@ -133,6 +133,8 @@ if grafici
     set(gca, 'FontSize', 12);
     set(gcf, 'Color', 'white');
 
+    %export_fig('identification_NL_CIRC_ON_GA_WORST.pdf','-pdf');
+
     %------------IOB------------
     %calcolo IOB_cap
     IOB_cap = o3*(x(2,:) + x(3,:));
@@ -166,6 +168,8 @@ if grafici
     set(gca, 'FontSize', 12);
     set(gcf, 'Color', 'white');
 
+    %export_fig('identification_NL_CIRC_ON_IOB_WORST.pdf','-pdf');
+
     %-----------Ra-------------
     %calcolo Ra_cap
     Ra_cap = o2*x(4,:);
@@ -198,6 +202,8 @@ if grafici
     legend('show');
     set(gca, 'FontSize', 12);
     set(gcf, 'Color', 'white');
+
+    %export_fig('identification_NL_CIRC_ON_RA_WORST.pdf','-pdf');
 end
 
 end
