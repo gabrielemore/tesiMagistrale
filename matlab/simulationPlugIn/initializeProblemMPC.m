@@ -1,4 +1,36 @@
-function [opti,MPC] = initializeProblemMPC(N,A_d,B_u_d,B_r_d,C_d,E_d,x1min,x1max,p_IOB,p_iper_x1,p_ipo_x1,p_iper,p_ipo,umax,umin,ymin,ymax,o4)
+function [MPC,N,IOB_s,IOB_d] = initializeProblemMPC(A_d,B_u_d,B_r_d,C_d,E_d,o4,Ub,CR)
+
+addpath('C:\Users\cal_p\Documents\MATLAB\casadi-3.6.5');
+import casadi.*
+
+%orizzionte predittivo
+N=72;
+%vincoli controllo
+umin = 0;
+umax = 15;
+
+%vincoli (nb:x4 e x5 senza vincoli)
+x1min = 54;
+x1max = 300;
+% IOB
+CHO_UB = 90;
+tau = 120;
+IOB_s = o4*2*Ub; %[22 - 6)
+IOB_d = IOB_s + (CHO_UB/CR + tau*Ub); %[6 - 22)
+
+%uscita
+ymin = 70;
+ymax = 140;
+
+%Pesi ipoglicemia e iperglicemia
+p_ipo = 1*10^9;
+p_iper = 1*10^7;
+%Pesi variabili slack stati x1 e IOB(x2 e x3)
+p_ipo_x1 =1*10^9;
+p_iper_x1 =1*10^9;
+p_IOB = 1*10^9;
+
+
 
 opti = casadi.Opti();
 
@@ -96,7 +128,7 @@ opti.solver('ipopt', plgopt, s_opts);
 
 %funzione MPC
 %opti.to_function(name, inputs, outputs, input_names, output_names)
-MPC=opti.to_function('MPC',{xk,rk,IOB_bound},{uf,xf,V,delta_ipo,delta_iper},{'xk','rk','IOB_bound'},{'uf_opt','xf_opt','V_opt','delta_ipo','delta_iper'});
+MPC=opti.to_function('MPC',{xk,rk,IOB_bound},{uf,xf,V,delta_ipo,delta_iper,delta_ipo_x1,delta_iper_x1,delta_IOB,xa,ua},{'xk','rk','IOB_bound'},{'uf_opt','xf_opt','V_opt','delta_ipo','delta_iper','delta_ipo_x1','delta_iper_x1','delta_IOB','xa','ua'});
 
 end
 

@@ -102,129 +102,154 @@ function [modelInputsToModObject, outSignalArray, runStopStatusToModObject] = sa
   try  
     populationName = getsimsettings('populationName');
 
-    import casadi.* %%???da fare ogni volta?
-
     %VARIABILI PERSISTENT
     %var temporali
-    persistent Ts deltaT
+    persistent Ts Tsim %deltaT
     %parametri sistema
-    persistent o0 o1 o2 o3 o4 o5;
+    %persistent o0 o1 o2 o3 o4 o5;
     %matrici sistema
-    persistent A_d B_u_d B_r_d C_d E_d;
+    %persistent A_d B_u_d B_r_d C_d E_d;
     %costanti MPC
-    persistent N umin umax x1min x1max CHO_UB tau IOB_s IOB_d ymin ymax p_ipo p_iper p_ipo_x1 p_iper_x1 p_IOB;
+    %persistent N umin umax x1min x1max CHO_UB tau IOB_s IOB_d ymin ymax p_ipo p_iper p_ipo_x1 p_iper_x1 p_IOB;
     %osservatore
     persistent Aaug Baug Caug Q_kf R_kf Pkk x_aug u_aug;
     %IOB bound RK vet
-    persistent IOB_vet rk_in;
+    persistent N IOB_vet rk_in rk_in_full;
     %var. CasADi
-    persistent opti MPC
-    % %var. CasADi
-    % persistent opti xf uf xa ua delta_iper_x1 delta_ipo_x1 delta_IOB delta_ipo delta_iper IOB_bound xk rk
+    persistent MPC
+
+    persistent v_xf v_uf v_x_obs v_xa v_ua v_pkk v_kk v_VN v_u_in v_y v_exit v_delta_iper v_delta_ipo v_delta_iper_x1 v_delta_ipo_x1 v_delta_IOB v_time_sol theta_ott
+        
     
     %inizializzazione alla prima iterazione variabili persistent
     if timeObject.minutesPastSimStart == 0
         %var temporali
+        Tsim = getsimsettings('simDurationMinutes') +1;
         Ts=5;
         deltaT=1;
         
         %parametri sistema
-        [o0,o1,o2,o3,o4,o5] = initializeParameter();
+        [o0,o1,o2,o3,o4,o5] = initializeParameter(subjObject.name);
         %matrici sistema
         [A_d,B_u_d,B_r_d,C_d,E_d] = initializeSysMatrix(o0,o1,o2,o3,o4,o5,Ts,deltaT);
         
         %costanti MPC
         dailyBasalInsulin = subjObject.dailyBasalInsulin;
         Ub = dailyBasalInsulin/(24*60);
-        CR=o2/o3;
-        [N,umin,umax,x1min,x1max,CHO_UB,tau,IOB_s,IOB_d,ymin,ymax,p_ipo,p_iper,p_ipo_x1,p_iper_x1,p_IOB]=initializeConstantMPC(o4,Ub,CR);
+        CR=o2/o3;     
         
         %osservatore
         [Aaug,Baug,Caug,Q_kf,R_kf,Pkk] = initializeODO(A_d,B_u_d,B_r_d,C_d,E_d,Ts);
-        x0 = [Gb Ub Ub 0 0]';
+        x0 = [subjObject.Gb Ub Ub 0 0]';
         x_aug = [x0;0;0];
         u_aug = [0;0;1];
 
         %casaADi
-        [opti,MPC] = initializeProblemMPC(N,A_d,B_u_d,B_r_d,C_d,E_d,x1min,x1max,p_IOB,p_iper_x1,p_ipo_x1,p_iper,p_ipo,umax,umin,ymin,ymax,o4);
+        [MPC,N,IOB_s,IOB_d] = initializeProblemMPC(A_d,B_u_d,B_r_d,C_d,E_d,o4,Ub,CR);
         
         %IOB bound
-        IOB_vet = PGcreate_IOB_vector(getsimsettings(simDurationMinutes),IOB_s,IOB_d);
+        IOB_vet = PGcreate_IOB_vector(Tsim,IOB_s,IOB_d);
         
-        %RK vet (da creare funzione creazione pasti in base a Tmax)
-        rk_in = zeros(1,getsimsettings(simDurationMinutes)+(N*Ts));
-        rk_in(801:830) = 60/30; %60g divisi in 30 minuti
-        rk_in(1001:1020) = 30/20; %30g divisi in 20 minuti
+        %RK vet
+        [rk_in,rk_in_full] = create_RK_random(Tsim+(N*Ts));
+            
+        %vettori per salvataggio dati intermedi
+        v_xf=[];
+        v_uf=[];
+        v_x_obs=[];
+        v_xa=[];
+        v_ua=[];
+        v_pkk=[];
+        v_kk=[];
+        v_VN=[];
+        v_u_in=[];
+        v_y=[];
+        v_exit=[];
+        v_delta_iper=[];
+        v_delta_ipo=[]; 
+        v_delta_iper_x1=[];
+        v_delta_ipo_x1=[];
+        v_delta_IOB=[];
+        v_time_sol =[];
+        theta_ott = [o0,o1,o2,o3,o4,o5];
+
     end
 
-    %variabili per file debug info paziente
-    CR = num2str(subjObject.CR);
-    CF = num2str(subjObject.CF);
-    Gb = num2str(subjObject.Gb);
-    BW = num2str(subjObject.BW);
-    dailyBasalInsulin = num2str(subjObject.dailyBasalInsulin);
-    OGTT = num2str(subjObject.OGTT);
-    mealAmount = num2str(nextMealObject.amountMg);
-    mealBolusMulti = num2str(nextMealObject.bolusMultiplier);
-    timeToMeal = num2str(nextMealObject.minutesUntilNextMeal);
-    exerciseInt = num2str(nextExerciseObject.intensityFrac);
-    minuteOfSim = num2str(timeObject.minutesPastSimStart);
-    DOY = num2str(timeObject.daysSinceJan1);
-    DOW = num2str(timeObject.daysSinceMonday);    
-    minOfDay = num2str(timeObject.minutesPastMidnight);
-    tfstr = {'false','true'};
-    if timeObject.minutesPastSimStart == 0
-        debugLog = [populationName, '(', subjObject.name, '), ',  CR, ', ' , CF , ', ' , Gb , ', ' ,...
-         BW , ', ' , dailyBasalInsulin, ', ' , OGTT ,...
-        '\n\tType 1: ' , tfstr{subjObject.type1+1} ,...
-        '\n\tmeal amount: ' , mealAmount, ', time to meal: ' ,...
-        timeToMeal , ', meal bolus mult: ' , mealBolusMulti ,...
-        '\n\texercise int: ' , exerciseInt ,...
-        '\n\tminute of Sim: ' , minuteOfSim ,...
-        ', DOY: ' , DOY , ', DOW: ' , DOW ,...
-        ', min of day: ' , minOfDay,'\n'];
-    end
-
-    y = sensorSigArray(1); %???sensore giusto?
+    y = sensorSigArray(1);
     u_in=0;
 
     if mod(timeObject.minutesPastSimStart,Ts) == 0
         %OSSERVATORE
         %stima x0 con osservatore
-        [xk_obs,Pkk,~]=PG_ODO(Aaug,Baug,Caug,y,x_aug,u_aug,Pkk,Q_kf,R_kf);
+        [xk_obs,Pkk,Kk]=PG_ODO(Aaug,Baug,Caug,y,x_aug,u_aug,Pkk,Q_kf,R_kf);
         %non considero i disturbi per MPC (prendo solo i primi 5 stati)
         xk_sim = xk_obs(1:5);
 
         %costruzione vettore rk_sim di lunghezza N (predizione 6h)
-        rk_sim = create_RK_Sim(rk_in,timeObject.minutesPastSimStart,Ts,N);
+        rk_sim = create_RK_Sim(rk_in,timeObject.minutesPastSimStart+1,Ts,N);
 
         %MPC
         %risolvo il problema di minimizzazione al passo k
-        [uf_sol,xf_sol,V_sol,d_ipo,d_iper]=MPC(xk_sim,rk_sim,IOB_vet(k:Ts:timeObject.minutesPastSimStart+N*Ts));
+        [uf_sol,xf_sol,V_sol,d_ipo,d_iper,d_ipo_x1,d_iper_x1,d_IOB,xa_sol,ua_sol]=MPC(xk_sim,rk_sim,IOB_vet((timeObject.minutesPastSimStart+1):Ts:timeObject.minutesPastSimStart+1+N*Ts));
         %verifico exit MPC
         exit=get_stats(MPC);
-        if exit.success==1
-            %converto risultato simbolico in risultato numerico
-            uf_sim=full(uf_sol);
-            % prendo solo il primo elemento di uf ottima e lo applico al sistema
-            u_in=uf_sim(1);
-        else
-            %se non trovo una soluzione ottima utilizzo la soluzione al
-            %passo precedente
-            u_in=u_aug(1);
-        end
 
+        %salvataggio dati intermedio
         %converto risultato simbolico in risultato numerico
         xf_sim=full(xf_sol);
+        uf_sim=full(uf_sol);
+        xa_sim=full(xa_sol);
+        ua_sim=full(ua_sol);
         Vn=full(V_sol);
         delta_iper_sim = full(d_iper);
         delta_ipo_sim = full(d_ipo);
+        delta_iper_x1_sim = full(d_iper_x1);
+        delta_ipo_x1_sim = full(d_ipo_x1);
+        delta_IOB_sim = full(d_IOB);
+
+        if exit.success==1
+            % prendo solo il primo elemento di uf ottima e lo applico al sistema
+            u_in=uf_sim(1);
+        else
+            %se non trovo una soluzione ottima
+            u_in=0;
+        end
+
+        %matrice stati x controllati con MPC su N=72 (6 ore)
+        v_xf = [v_xf;xf_sim];
+        %matrice controllo u
+        v_uf = [v_uf;uf_sim];
+        %matrice stati artificiali
+        v_xa = [v_xa;xa_sim];
+        %matrice controllo artificiale
+        v_ua = [v_ua;ua_sim];
+        %matrice valore del costo
+        v_VN = [v_VN; Vn];
+        %matrice soluzione MPC trovata
+        v_exit=[v_exit,exit.success];
+        %salvo matrici osservatore per vedere se convergono
+        v_kk = [v_kk;Kk];
+        v_pkk = [v_pkk;Pkk];
+        %salvo valori delta calcolati in funzione MPC
+        v_delta_iper = [v_delta_iper;delta_iper_sim];
+        v_delta_ipo = [v_delta_ipo;delta_ipo_sim];
+        v_delta_iper_x1 = [v_delta_iper_x1;delta_iper_x1_sim];
+        v_delta_ipo_x1 = [v_delta_ipo_x1;delta_ipo_x1_sim];
+        v_delta_IOB = [v_delta_IOB;delta_IOB_sim];
+        %salvo valori xk osservati dall'osservatore
+        v_x_obs = [v_x_obs xk_obs];
+        %salvo tempi risoluzione MPC di ogni iterazione
+        v_time_sol = [v_time_sol;exit.t_wall_total];
 
         %aggiorno valori aug per prossima iterazione MPC
         x_aug = xk_obs;
-        u_aug = [u_in;rk_in(k);1];
+        u_aug = [u_in;rk_in(timeObject.minutesPastSimStart+1);1];
     end
 
+    %salvo y misurata
+    v_y = [v_y;y];
+    %salvo u ingresso
+    v_u_in=[v_u_in;u_in];
 
     %conversione misure
     %input insulin U->pmol/minute
@@ -232,47 +257,24 @@ function [modelInputsToModObject, outSignalArray, runStopStatusToModObject] = sa
     debugLog = [debugLog 'Correction bolus: ' num2str(correctionBolusDelivered)];
 
     %input RK al simulatore 
+    rescueCarbsDelivered = rk_in(timeObject.minutesPastSimStart+1)*1000; %g->mg
+    fullRescueCarbsDelivered = rk_in_full(timeObject.minutesPastSimStart+1)*1000;   
 
-    %   mealCarbsMgPerMin:  rate of consumption of meal carbohydrates (mg/minute)
-    %   fullMealCarbMgExpectedAtStart:  value indicated only at start of meal (0 at all other times), representing total carbs in the meal (mg).
-
-
-
-	% % Read from sensor signals
-    % bg = sensorSigArray(1); % Sensor#1 reading
-    % cgm = sensorSigArray(2); % Sensor#2 reading
-    % rescueCarbsDelivered = 0;
-    % correctionBolusDelivered = 0;    
-    % if bg < 20
-    %     runStopStatusToModObject.stopRun = true;
-    %     runStopStatusToModObject.error = false;
-    %     runStopStatusToModObject.message = 'BG dropped below 20';
-    % elseif bg < 70
-    %     rescueCarbsDelivered = 3000;
-    %     debugLog = [debugLog 'Rescue: ' num2str(rescueCarbsDelivered)];
-    % end
-    % if bg > 180
-    %     if (cgm > 180)            
-    %         correctionBolusDelivered = 500;
-	% 		debugLog = [debugLog 'Correction bolus: ' num2str(correctionBolusDelivered)];
-    %     else
-    %         correctionBolusDelivered = 300;
-	% 		debugLog = [debugLog 'Correction bolus: ' num2str(correctionBolusDelivered)];
-    %     end
-    % else
-    %     if (cgm > 180)
-    %         correctionBolusDelivered = 200;
-    %         debugLog = [debugLog 'Correction bolus: ' num2str(correctionBolusDelivered)];
-    %     end
-    % end    
-
-
-    modelInputsToModObject.mealCarbsMgPerMin = modelInputsToModObject.mealCarbsMgPerMin + rescueCarbsDelivered;
-    modelInputsToModObject.fullMealCarbMgExpectedAtStart = modelInputsToModObject.fullMealCarbMgExpectedAtStart + rescueCarbsDelivered;
-    modelInputsToModObject.sqInsulinNormalBolus = modelInputsToModObject.sqInsulinNormalBolus + correctionBolusDelivered;
+    %input controllo e pasti al simulatore
+    modelInputsToModObject.mealCarbsMgPerMin = rescueCarbsDelivered;
+    modelInputsToModObject.fullMealCarbMgExpectedAtStart = fullRescueCarbsDelivered;
+    modelInputsToModObject.sqInsulinNormalBolus = correctionBolusDelivered;
     
-    outSignalArray(1) = rescueCarbsDelivered;
-    outSignalArray(2) = correctionBolusDelivered;
+    outSignalArray = {};
+    %salvataggio workspace finale
+    if Tsim == timeObject.minutesPastSimStart +1
+        debugLog = [debugLog 'Save succeded '];
+        %cambia on con off
+        filename = sprintf('SIM_LIN_CIRC_ON/%s_dati_simulazione_T%d.mat', subjObject.name,Tsim);
+        save(filename, 'v_xf', 'v_uf', 'v_x_obs', 'v_xa', 'v_ua', 'v_pkk', 'v_kk', 'v_VN', 'v_u_in', 'v_y', 'v_exit', ...
+            'v_delta_iper', 'v_delta_ipo', 'v_delta_iper_x1', 'v_delta_ipo_x1', 'v_delta_IOB', 'v_time_sol','rk_in_full','rk_in','theta_ott');
+    end
+   
   catch ME
       debugLog = [debugLog getReport(ME)];
   end
